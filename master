@@ -1,1 +1,15 @@
+from tkinter import Tk, Frame
+from tkinter.ttk import Notebook
 
+class POS(Tk):
+    def __init__(self):
+        super().__init__()
+        self.geometry('300x500')
+        self.title('General Point of Sale System')
+        
+        self.frm_pos = Frame(self, relief= 'sunken')
+        self.note_princ = Notebook(self, )
+
+if __name__ == '__main__':
+    app = POS()
+    app.mainloop()
