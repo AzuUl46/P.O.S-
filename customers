@@ -1,0 +1,192 @@
+from tkinter import Tk, Frame, LabelFrame, Toplevel, StringVar, Label, Entry
+from tkinter.ttk import Notebook, Style, Button
+import re
+
+class POS(Tk):
+    def __init__(self):
+        super().__init__()
+        self.geometry('300x500')
+        self.title('General Point of Sale System')
+        
+        self.serv = ['Ventas', 'Inventarios', 'Clientes', 'Reportes' ]
+        self.inventarios = ['Productos', 'Ventas', 'Compras']
+        self.ventas = ['Venta', 'Promociones', 'Devoluciones']
+        self.clientes = ['Registro', 'Buscador']
+        self.data = []
+        self.valid_email = '[A-Za-z0-9.-]+@[A-Za-z0-9.-]+\.[A-Za-z]+'
+        self.valid_name = '[A-Za-zá-úÁ-Ú]+ [A-Za-zá-úÁ-Ú ?]+[^ $]'
+        
+        type_cont = 0
+        sub_cont = 0
+        self.frm_pos = Frame(self, relief= 'sunken')
+        self.frm_pos.pack()
+        self.note_princ = Notebook(self.frm_pos)
+        self.note_princ.pack(side='left')
+
+        self.inicialize()        
+        
+        
+
+    def inicialize(self):
+        global type_cont
+        
+        for type_cont in range(4):
+            self.lblf_1 = LabelFrame(self.note_princ, text=self.serv[type_cont])
+            self.lblf_1.pack(expand='true')
+            self.note_princ.add(self.lblf_1, text=self.serv[type_cont])
+            type_cont+=1
+            self.pestañas()
+
+    def pestañas(self):
+        self.note_sub = Notebook(self.lblf_1)
+        self.note_sub.pack(side='left')
+        if type_cont == 1:
+            for sub_cont in range(3):
+                self.lblf_2 = LabelFrame(self.note_sub, text=self.ventas[sub_cont])
+                self.lblf_2.pack(expand='true')
+                self.note_sub.add(self.lblf_2, text=self.ventas[sub_cont])
+                sub_cont+=1 
+        elif type_cont == 2:
+            for sub_cont in range(3):
+                self.lblf_2 = LabelFrame(self.note_sub, text=self.inventarios[sub_cont])
+                self.lblf_2.pack(expand='true')
+                self.note_sub.add(self.lblf_2, text=self.inventarios[sub_cont])
+                sub_cont+=1 
+        elif type_cont == 3:
+            for sub_cont in range(2):
+                self.lblf_3 = LabelFrame(self.note_sub, text=self.clientes[sub_cont])
+                self.lblf_3.pack(expand='true')
+                self.note_sub.add(self.lblf_3, text=self.clientes[sub_cont])
+                sub_cont+=1
+                if sub_cont == 1:
+                    def do_registry(self):
+                        self.dic = {}
+                        self.dic['name'] = self.fullname.get()
+                        self.dic['email'] = self.email.get()
+                        self.dic['birth'] = self.nacimiento.get()
+                        self.dic['number'] = self.numero.get()
+                        self.data.append(self.dic)
+                        self.entry_name.delete(0, 'end')
+                        self.entry_email.delete(0, 'end')
+                        self.entry_nacimiento.delete(0, 'end')
+                        self.entry_numero.delete(0, 'end')
+                        self.entry_name.focus()
+
+                    def createWidgets(frm_labels, frm_entry, lbl_txt, strvar):
+                        self.lbl = Label(frm_labels, text=lbl_txt, anchor='e')
+                        self.lbl.pack(fill='x', expand=True, pady=5)
+                        self.entry = Entry(frm_entry, textvariable=strvar)
+                        self.entry.pack(pady=5)
+                        return self.lbl, self.entry
+
+                    def set_focus(event, widget):
+                        widget.focus()
+
+                    def verify_info(): 
+                        self.new_window.deiconify() 
+                        self.frm_show_data = Frame(self.new_window)
+                        self.frm_show_data.pack() 
+                        self.lbl_show_name = Label(self.frm_show_data, text=f'Nombre: {self.entry_name.get()}')
+                        self.lbl_show_name.pack()
+                        self.lbl_show_email = Label(
+                        self.frm_show_data, text=f'Correo electrónico: {self.entry_email.get()}')
+                        self.lbl_show_email.pack()
+                        self.lbl_show_nacimiento = Label(
+                        self.frm_show_data, text=f'Fecha de nacimiento: {self.entry_nacimiento.get()}')
+                        self.lbl_show_nacimiento.pack()
+                        self.lbl_show_numero = Label(
+                        self.frm_show_data, text=f'Número de teléfono: {self.entry_numero.get()}')
+                        self.lbl_show_numero.pack()
+ 
+                        self.frm_show_buttons = Frame(self.new_window)
+                        self.frm_show_buttons.pack()
+
+                        self.btn_back = Button(self.frm_show_buttons, text='Regresar',
+                         command=lambda: back(self.frm_show_data, self.frm_show_buttons))
+                        self.btn_back.pack()
+                        self.btn_save = Button(self.frm_show_buttons,
+                            text='Guardar información', command=lambda: save_info(self.frm_show_data, self.frm_show_buttons))
+                        self.btn_save.pack()
+
+                    def back( frm1, frm2):
+                         #  '''Función para ocultar la ventana secundaria y mostrar la ventana principal'''
+                        self.new_window.withdraw() 
+                        #ventana.deiconify() 
+                        self.entry_name.focus()
+                        frm1.destroy() 
+                        frm2.destroy()  
+                      
+                    def save_info(self, frm1, frm2):
+                        # '''Función para guardar los datos de usuario en la lista
+
+                       # NOTA: Los datos se guardarán en forma de diccionario, bajo las siguientes llaves:
+                       # name, email, course, teacher.'''
+                        self.do_registry()
+                        self.back(frm1, frm2)
+                        self.myStyle = Style()
+                        self.myStyle.configure('frm.TFrame', relief='ridge', borderwidth=5)
+                        self.myStyle.configure('lbl_form.TLabel',
+                            borderwidth=2, relief='groove')
+                        self.myStyle.configure('entry_form.TEntry')
+                        self.myStyle.configure('btns.TButton', foreground='#ffffff',
+                        background='#14ff10', highlightbackground='#000000')
+
+                    def checkEntryLen():
+   
+                        print('### Iniciando validación...')
+                        if re.fullmatch(self.valid_name, self.entry_name.get()):
+                            print('>>>> Nombre validado!!')
+                        else:
+                            print('Mejor suerte para la próxima, sigue participando )\'=')
+                    self.new_window = Toplevel()  
+                    self.new_window.geometry('250x150')
+                    self.new_window.withdraw() 
+
+                    self.frm_lbls_entrys = Frame(self.lblf_3)
+                    self.frm_lbls_entrys.pack()
+                    self.frm_labels = Frame(self.frm_lbls_entrys)
+                    self.frm_labels.pack(side='left')
+                    self.frm_entrys = Frame(self.frm_lbls_entrys)
+                    self.frm_entrys.pack(side='left')
+
+                    self.fullname = StringVar()
+                    self.lbl_name, self.entry_name = createWidgets(self.frm_labels, self.frm_entrys, 'Nombre:', self.fullname)
+ 
+                    self.entry_name.bind('<Return>', lambda event: set_focus(event, self.entry_email))
+                    self.entry_name.bind('<Escape>', lambda event: self.entry_name.delete(0, 'end'))
+                    self.entry_name.bind('<KeyRelease>', checkEntryLen())
+                    self.entry_name.focus()
+  
+                    self.email = StringVar()
+                    self.lbl_email, self.entry_email = createWidgets(self.frm_labels, self.frm_entrys, 'Correo electrónico:', self.email)
+                    self.entry_email.bind('<Return>', lambda event: set_focus(event, self.entry_nacimiento))
+                    self.entry_email.bind('<Escape>', lambda event: self.entry_email.delete(0, 'end'))
+                    self.entry_email.bind('<KeyRelease>', checkEntryLen())
+ 
+                    self.nacimiento = StringVar()
+                    self.lbl_nacimiento, self.entry_nacimiento = createWidgets(self.frm_labels, self.frm_entrys, 'Nacimiento:', self.nacimiento)
+                    self.entry_nacimiento.bind('<Return>', lambda event: set_focus(event, self.entry_nacimiento))
+                    self.entry_nacimiento.bind('<Escape>', lambda event: self.entry_nacimiento.delete(0, 'end'))
+                    self.entry_nacimiento.bind('<KeyRelease>', checkEntryLen())
+
+                    self.numero = StringVar()
+                    self.lbl_numero, self.entry_numero = createWidgets(self.frm_labels, self.frm_entrys, 'numero:', self.numero)
+                    self.entry_numero.bind('<Return>', lambda event: set_focus(self.event, self.btn_save))
+                    self.entry_numero.bind('<Escape>', lambda event: self.entry_numero.delete(0, 'end'))
+                    self.entry_numero.bind('<KeyRelease>', checkEntryLen())
+ 
+                    self.frm_buttons = Frame(self.lblf_3)
+                    self.frm_buttons.pack()
+ 
+                    self.btn_save = Button(self.frm_buttons, text='Registrar', command=verify_info())
+                    #self.btn_save['state'] = 'disabled' 
+                    self.btn_save.pack(side='left', pady=5, padx=10)
+                    self.new_window.protocol('WM_DELETE_WINDOW', back(self.frm_show_data, self.frm_show_buttons))
+ 
+                 
+
+
+
+if __name__ == '__main__':
+    app = POS()
+    app.mainloop()
