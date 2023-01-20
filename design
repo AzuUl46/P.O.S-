@@ -1,7 +1,11 @@
+# Librería Tkinter para la elaboración del GUI.
 from tkinter import Tk, Frame, Toplevel, StringVar, Label, Entry, ttk, messagebox, IntVar
 from tkinter.ttk import  Style, Button, Treeview, Combobox, Spinbox
+# Librería werkzeug para la verificación y elaboración de encriptaciones que se realizan dentro del programa.
 from werkzeug.security import generate_password_hash, check_password_hash
+# Datetime para las fechas que se encuentren dentro de la base de datos.
 from datetime import datetime
+# Librería para graficar.
 import matplotlib.pyplot as plt
 from modulos.database import getdata
 import re 
@@ -11,11 +15,13 @@ import re
 class POS(Tk):
     def __init__(self):
         super().__init__()
+        # Conexión a la base de datos a través de un import de un módulo aparte.
         self.db = getdata()
-
+        # Creación del cursor para la interacción dentro de la base de datos.
         self.cursor = self.db.cursor()
         self.cursor.execute("Select * from usuarios WHERE Username = 'inicio'")
         self.contraseña = self.cursor.fetchall()
+        # Listas para guardar información de la base de datos.
         self.psswrd = []
         self.users = []
         self.pst = []
@@ -48,6 +54,7 @@ class POS(Tk):
         self.inicialize() 
         self.style_pos()
 
+    # Primer ventana en donde se ingresará la contraseña general del programa.
     def inicialize(self):
         self.frm_cont_1 = Frame(self.frm_pos)
         self.frm_cont_1.pack(pady=10)
@@ -59,7 +66,8 @@ class POS(Tk):
         self.entry_cont.bind('<Return>',lambda event:self.usuario() )
         self.lbl_error = Label(self.frm_pos, text='',font=('Arialblack', 15), foreground='red')
         self.lbl_error.pack()
-
+        
+    # Función que verifica la contraseña con respecto a la información de la base de datos.
     def usuario(self):
         self.lbl_error.config(text='')
         c = self.entry_cont.get() 
@@ -72,7 +80,7 @@ class POS(Tk):
             self.lbl_error.config(text='Contraseña incorrecta')
             self.entry_cont.delete(0, 'end')
 
-    
+    # Segunda ventana para el ingreso del usuario y la contraseña.
     def password(self):
         self.geometry('300x100')
         self.cursor.execute("Select * from usuarios;")
@@ -99,7 +107,7 @@ class POS(Tk):
         self.entry_cont_sec_2 .pack(side='left',padx=5)
         self.entry_cont_sec_2.bind('<Return>',lambda event:self.usuario_2())
 
-
+    # Función para verificar el usuario y la contraseña ingresados dentro de los entrys de la ventana.
     def usuario_2(self):
         self.lbl_error.pack()
         self.lbl_error.config(text='')
@@ -120,6 +128,7 @@ class POS(Tk):
         else: 
             self.lbl_error.config(text='El usuario no está registrado en el sistema')
 
+    # Ejecución visual del programa general; la pantalla principal.
     def Pestañas(self):#'Inventarios', 'Clientes','Productos','Reportes', 'Pagos'
         self.frm_smo.pack_forget()
         self.lbl_error.pack_forget()
@@ -149,7 +158,7 @@ class POS(Tk):
         self.lbl_usuario = Label(self.frm_usuario, text='', font=('', 14), fg='#ffffff', bg='#e90038')
         self.lbl_usuario.pack(side='right')
        
-       #Barra lateral
+       # Barra lateral
         self.btn_new_client = Button(self.frm_lateral, text='''Cliente 
  nuevo''', command=lambda:self.second_window(1,self.puesto))
         self.btn_new_client.pack(pady=20)
@@ -159,7 +168,7 @@ class POS(Tk):
         self.btn_config = Button(self.frm_lateral, text='Configuración', command=lambda:self.second_window(3,self.puesto))
         self.btn_config.pack(side='bottom', pady=10, padx=5)
 
-       #Parte de toma de datos
+       # Parte de toma de datos
         self.frm_products_sale = Frame(self.frm_sale) #Frame de muestra de articulos
         self.frm_products_sale.pack(fill='both', expand=1)
         self.frm_cap_cliente = Frame(self.frm_products_sale) #Captura cliente
@@ -222,7 +231,7 @@ class POS(Tk):
             if self.puesto == 'administrador':
                 self.btn_cancel.configure(state='normal')
 
-        #Total
+        # Total
 
         self.frm_lbl_total = Frame(self.frm_total, background='#c8d8da')
         self.frm_lbl_total.pack(fill='x',expand=1)
@@ -254,6 +263,7 @@ class POS(Tk):
         for record in tree.get_children():
             tree.delete(record)
 
+    # Ventana secundaria al momento de pagar; la calculadora.
     def pagar(self, total):
         self.second.deiconify()
         self.second.geometry('600x500')
@@ -366,7 +376,8 @@ class POS(Tk):
         debe == 0
         pagado.clear()
         messagebox.showinfo(title='Compra confirmada', message='¡Gracias por su compra!')
-
+    
+    # Ejecución de la segunda ventana.
     def second_window(self,necesidad, puesto):
         self.withdraw()
         self.second.deiconify()
@@ -421,12 +432,13 @@ class POS(Tk):
 
         #inf
         self.cursor.execute("Select ID, `Apellido paterno`, `Apellido materno`, `Nombre(s)`, DATE_FORMAT(Nacimiento, '%d/%m/%Y'), Teléfono, email, Puntos from clientes")
-
+        
+        # Elaboración de la tabla de clientes a través de un treeview.
         self.trvw_clientes = Treeview(frm_inf)
         self.trvw_clientes['show'] = 'headings'
 
         self.trvw_clientes["columns"] = ("ID", "Apellido paterno", "Apellido materno", "Nombre(s)", "Nacimiento", "Teléfono", "email", "Puntos")
-
+        
         self.trvw_clientes.column("ID", width=18, minwidth= 18, anchor = 'center')
         self.trvw_clientes.column("Apellido paterno", width=135, minwidth= 135, anchor='center')
         self.trvw_clientes.column("Apellido materno", width=135, minwidth= 135, anchor='center')
@@ -477,7 +489,8 @@ class POS(Tk):
         self.entry_numero.insert(0,values[5])
         btn.configure(command=lambda: self.update_record(self.entry_apellido_1.get(),self.entry_apellido_2.get(),self.entry_name.get(),
                         self.entry_nacimiento.get(), self.entry_numero.get(), self.entry_email.get()))
-
+                        
+    # Función para modificar datos dentro de la base de datos.
     def update_record(self, apellido_1,apellido_2,name,nacimiento,num,email):
         process = self.verify_entrys()
         if process == 'ok':
@@ -492,7 +505,8 @@ class POS(Tk):
             self.db.commit()
             self.trvw_clientes.item(selected, text='', values=(selected,values[0],values[1],values[2],nacimiento,values[4],values[5]))
             self.delete_entrys()
-
+    
+    # Función que habilita las pestañas conforme al puesto que tiene usuario.
     def activar_frm_sup(self,btn_a, btn_c,opc, e_1, e_2, e_3, e_4, e_5, e_6, btn_1,btn_2, btn_3, puesto):
         self.delete_entrys()
         if opc == 1 or opc == 2:
@@ -588,6 +602,8 @@ class POS(Tk):
                 self.btn_back.configure(command=lambda: salir(self.frm_show_data, self.frm_show_buttons))
                 self.btn_save.configure(command=lambda: salvar_inf(self.frm_show_data, self.frm_show_buttons))
                 #self.activar_frm_sup(btn,btn_c,opc, self.entry_name, self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero, btn_1,btn_2, btn_3, puesto)
+        
+        # Función para el registro de los clientes dentro de la base de datos.
         def do_registry():
             self.dic = {}
             self.dic['name'] = self.fullname.get()
@@ -606,7 +622,8 @@ class POS(Tk):
             self.entry_numero.delete(0, 'end')
             self.entry_name.focus()
             print(self.dic)
-
+        
+        # Función para verificar los datos ingresados en los entry's para que sean accesibles a la base de datos.
         def verify_entrys():
             vnm = ''.join(char for char in self.fullname.get() if char.isalpha() or char == ' ')
             vap = ''.join(char for char in self.apellido_1.get() if char.isalpha() or char == ' ')
@@ -679,7 +696,6 @@ class POS(Tk):
                         elif i == 9:
                             return 'ok'
 
-        # Verificación de los datos ingresados en los entrys
 
 
         def salir(frm1, frm2):
@@ -718,7 +734,7 @@ class POS(Tk):
         btn_c.configure(command=lambda:self.activar_frm_sup(self.btn_aceptar,self.btn_cancelar, 3, self.entry_name,
             self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero,self.btn_agregar_clientes, self.btn_modificar_clientes, self.btn_eliminar_clientes, self.puesto))
         
-
+        # Creación de los entrys y labels dentro de la ventana.
         self.fullname = StringVar()
         self.lbl_name, self.entry_name = self.createWidgets(
             self.frm_info_1, 'Nombre:', self.fullname, 'disabled')
@@ -809,7 +825,8 @@ class POS(Tk):
         #inf
         self.trvw_abasto = Treeview(frm_inf, height=22)
         self.trvw_abasto.pack( fill='both', expand=1)
-
+    
+        # Creación de la tabla de productos a través de un treeview.
         self.cursor.execute("Select `Código de barras`, Nombre, Descripción, `Tamaño/Peso`, Departamento, `Precio de costo`, `Precio de venta` from productos")
         self.trvw_abasto['show'] = 'headings'
 
@@ -938,10 +955,12 @@ class POS(Tk):
         self.btn_cerrar_sesion = Button(frm_lateral, text='Cerrar sesión', command=lambda: self.inicio_sesion(frm_principal))
         self.btn_cerrar_sesion.pack(side='bottom',padx=5, pady=10)
         #frm sup
+        # Creación de la tabla de usuarios a través de un treeview.
         self.tree = Treeview(frm_sup)
         self.tree.pack(fill='both', expand=1)
         self.cursor.execute("Select Username, Puesto from usuarios")
         self.tree['show'] = 'headings'
+        
 
         self.tree["columns"] = ("Username", "Puesto")
 
