@@ -1,440 +1,120 @@
-# Librería Tkinter para la elaboración del GUI.
-from tkinter import Tk, Frame, Toplevel, StringVar, Label, Entry, ttk, messagebox, IntVar
-from tkinter.ttk import  Style, Button, Treeview, Combobox, Spinbox
-# Librería werkzeug para la verificación y elaboración de encriptaciones que se realizan dentro del programa.
+from tkinter import Tk, Frame, Toplevel, StringVar, Label, Entry, ttk, messagebox
+from tkinter.ttk import  Style, Button, Treeview, Spinbox, Combobox, Scrollbar
 from werkzeug.security import generate_password_hash, check_password_hash
-# Datetime para las fechas que se encuentren dentro de la base de datos.
-from datetime import datetime
-# Librería para graficar.
 import matplotlib.pyplot as plt
+from datetime import datetime
 from modulos.database import getdata
 import re 
 
+
 #comando click
-
-class POS(Tk):
-    def __init__(self):
-        super().__init__()
-        # Conexión a la base de datos a través de un import de un módulo aparte.
-        self.db = getdata()
-        # Creación del cursor para la interacción dentro de la base de datos.
-        self.cursor = self.db.cursor()
-        self.cursor.execute("Select * from usuarios WHERE Username = 'inicio'")
-        self.contraseña = self.cursor.fetchall()
-        # Listas para guardar información de la base de datos.
-        self.psswrd = []
-        self.users = []
-        self.pst = []
-
-        self.puesto = ''
-        for contra in self.contraseña:
-            self.psswrd.append(contra[3])
-        
-        self.geometry('300x100')
-        self.title('General Point of Sale System')
-
-        self.second = Toplevel(self)
-        self.second.geometry('400x600')
-        self.second.withdraw()
-        self.second.protocol("WM_DELETE_WINDOW", lambda:None)
-
-        self.third = Toplevel(self)
-        self.third.geometry('500x400')
-        self.third.withdraw()
-        self.third.protocol("WM_DELETE_WINDOW", lambda:None)
-
-        self.dinero = 0
-        
-        self.data = []
+#Verify art cambiar por las variables al mandarlo a llamar
+#Boton de modificar  y agregar para usuarios, abasto, boton modificar en clientes, 
+class Clientes():
+    def __init__(self,ventana,frm_principal, frm_lateral, frm_sup, frm_inf, btn_1, btn_2,btn_3, puesto):
         self.valid_email = '[A-Za-z0-9.-]+@[A-Za-z0-9.-]+\.[A-Za-z]+'
         self.valid_name = '[A-Za-zá-úÁ-Ú]+ [A-Za-zá-úÁ-Ú ?]+[^ $]'
+        self.data = []
 
-        self.frm_pos = Frame(self, relief= 'sunken')
-        self.frm_pos.pack(fill= 'both' ,expand=1)
-        self.inicialize() 
-        self.style_pos()
+        self.frm_principal = frm_principal
+        self.frm_lateral = frm_lateral
+        self.frm_sup = frm_sup
+        self.frm_inf = frm_inf
+        self.ventana = ventana
 
-    # Primer ventana en donde se ingresará la contraseña general del programa.
+        self.puesto = puesto
+
+        self.btn_1 = btn_1
+        self.btn_2 = btn_2
+        self.btn_3 = btn_3
+    
+
+        self.db = getdata()
+        self.cursor = self.db.cursor()
+        
+
     def inicialize(self):
-        self.frm_cont_1 = Frame(self.frm_pos)
-        self.frm_cont_1.pack(pady=10)
-        self.lbl_cont = Label(self.frm_cont_1, text='Contraseña : ',justify='center', font=('Arialblack', 12))
-        self.lbl_cont.pack(side='left',padx=5)
-        self.entry_cont = Entry(self.frm_cont_1,justify='center', font=('',13), width=15, show = '*')
-        self.entry_cont.pack(side='left',padx=5)
-        self.entry_cont.focus()
-        self.entry_cont.bind('<Return>',lambda event:self.usuario() )
-        self.lbl_error = Label(self.frm_pos, text='',font=('Arialblack', 15), foreground='red')
-        self.lbl_error.pack()
-        
-    # Función que verifica la contraseña con respecto a la información de la base de datos.
-    def usuario(self):
-        self.lbl_error.config(text='')
-        c = self.entry_cont.get() 
-        if check_password_hash(self.psswrd[0], c) == True:
-            self.psswrd.clear()
-            self.frm_cont_1.pack_forget()
-            self.lbl_error.pack_forget()
-            self.password()
-        else:
-            self.lbl_error.config(text='Contraseña incorrecta')
-            self.entry_cont.delete(0, 'end')
-
-    # Segunda ventana para el ingreso del usuario y la contraseña.
-    def password(self):
-        self.geometry('300x100')
-        self.cursor.execute("Select * from usuarios;")
-        usuarios = self.cursor.fetchall()
-        for user in usuarios:
-            self.users.append(user[1])
-            self.pst.append(user[2])
-            self.psswrd.append(user[3])
-        self.frm_smo = Frame(self.frm_pos)
-        self.frm_smo.pack()
-        self.frm_cont_2 = Frame(self.frm_smo)
-        self.frm_cont_2.pack(pady=10)
-        self.frm_cont_3 = Frame(self.frm_smo)
-        self.frm_cont_3.pack(pady=10)
-        self.lbl_cont_sec = Label(self.frm_cont_2, text='Usuario : ',justify='center', font=('Arialblack', 12))
-        self.lbl_cont_sec.pack(side='left',padx=5)
-        self.entry_cont_sec = Entry(self.frm_cont_2,justify='center', font=('',13), width=15)
-        self.entry_cont_sec.pack(side='left',padx=5)
-        self.entry_cont_sec.focus()
-        self.entry_cont_sec.bind('<Return>',lambda event:self.entry_cont_sec_2.focus())
-        self.lbl_cont_sec_2 = Label(self.frm_cont_3, text='Contraseña : ',justify='center', font=('Arialblack', 12))
-        self.lbl_cont_sec_2 .pack(side='left',padx=5)
-        self.entry_cont_sec_2  = Entry(self.frm_cont_3,justify='center', font=('',13), width=15, show = '$')
-        self.entry_cont_sec_2 .pack(side='left',padx=5)
-        self.entry_cont_sec_2.bind('<Return>',lambda event:self.usuario_2())
-
-    # Función para verificar el usuario y la contraseña ingresados dentro de los entrys de la ventana.
-    def usuario_2(self):
-        self.lbl_error.pack()
-        self.lbl_error.config(text='')
-        user = self.entry_cont_sec.get()
-        paswrd = self.entry_cont_sec_2.get()
-        if user in self.users:
-            ind = self.users.index(user)
-            if check_password_hash(self.psswrd[ind], paswrd) == True:
-                    self.puesto = self.pst[ind]
-                    self.usuario = self.users[ind]
-                    self.users.clear()
-                    self.psswrd.clear()
-                    self.pst.clear()
-                    self.Pestañas()            
-            else:
-                    self.lbl_error.config(text='Contraseña incorrecta')
-            
-        else: 
-            self.lbl_error.config(text='El usuario no está registrado en el sistema')
-
-    # Ejecución visual del programa general; la pantalla principal.
-    def Pestañas(self):#'Inventarios', 'Clientes','Productos','Reportes', 'Pagos'
-        self.frm_smo.pack_forget()
-        self.lbl_error.pack_forget()
-        self.geometry('1200x700')
-        self.frm_prog = Frame(self.frm_pos)
-        self.frm_prog.pack(fill= 'both' ,expand=1)
-        self.venta()
-        self.Status()
-        
-        
-    def venta(self):
-        #Ventas
-        # botones: #eb7a5a  , inicio:  #e90038 , botones activados:#70231a  , barras laterales:#ffffe4, frames especiales: #c8d8da
-
-        self.frm_1 = Frame(self.frm_prog)
-        self.frm_1.pack(fill= 'both' ,expand=1)   
-        
-        self.frm_usuario = Frame(self.frm_1, background='#e90038') # Nombre de empresa y Usuario
-        self.frm_usuario.pack(fill='x')
-        self.frm_lateral = Frame(self.frm_1, relief='groove', border=5, background='#ffffe4')
-        self.frm_lateral.pack(fill='y',side='left', ipady=10)
-        self.frm_sale = Frame(self.frm_1) # 
-        self.frm_sale.pack(fill='both', expand=1) 
-        
-        self.lbl_negocio = Label(self.frm_usuario, text='Point Of Sale', font=('Arial Black', 16), fg='#ffffff', background='#e90038')
-        self.lbl_negocio.pack(side='left')
-        self.lbl_usuario = Label(self.frm_usuario, text='', font=('', 14), fg='#ffffff', bg='#e90038')
-        self.lbl_usuario.pack(side='right')
-       
-       # Barra lateral
-        self.btn_new_client = Button(self.frm_lateral, text='''Cliente 
- nuevo''', command=lambda:self.second_window(1,self.puesto))
-        self.btn_new_client.pack(pady=20)
-        self.btn_abasto = Button(self.frm_lateral, text='Abasto', command=lambda:self.second_window(2,''))
-        self.btn_abasto.pack(pady=10)
-
-        self.btn_config = Button(self.frm_lateral, text='Configuración', command=lambda:self.second_window(3,self.puesto))
-        self.btn_config.pack(side='bottom', pady=10, padx=5)
-
-       # Parte de toma de datos
-        self.frm_products_sale = Frame(self.frm_sale) #Frame de muestra de articulos
-        self.frm_products_sale.pack(fill='both', expand=1)
-        self.frm_cap_cliente = Frame(self.frm_products_sale) #Captura cliente
-        self.frm_cap_cliente.pack(fill='x', expand=1, pady=5)
-        self.frm_captura = Frame(self.frm_products_sale) #Captura de codigo
-        self.frm_captura.pack( fill='both', expand=1)
-        self.frm_articulos = Frame(self.frm_products_sale) # Treeview y buttons
-        self.frm_articulos.pack(fill='both', expand=1)
-
-        self.frm_tree_buttons = Frame(self.frm_articulos)
-        self.frm_tree_buttons.pack(fill='both', expand=1)
-
-        self.frm_total = Frame(self.frm_articulos, background='#c8d8da')
-        self.frm_total.pack(fill='x', expand=1)
-
-        self.frm_tree = Frame(self.frm_tree_buttons)
-        self.frm_tree.pack(side='left', fill='both', expand=1)
-
-        self.frm_button_venta = Frame(self.frm_tree_buttons, relief='groove', border=5, background='#ffffe4')
-        self.frm_button_venta.pack(side='left',fill='y', ipadx=10)
-        self.frm_button_venta.configure(width=100)
-
-        self.lbl_cliente = Label(self.frm_cap_cliente, text='Cliente :', font=('', 13))
-        self.lbl_cliente.pack(side='left')
-        self.entry_cliente = Entry(self.frm_cap_cliente)
-        self.entry_cliente.pack(side='left',fill='x', expand=1, padx=10)
-        self.btn_buscar_cliente = Button(self.frm_cap_cliente, text='  Buscar  ' ,command=lambda:self.busqueda_cliente(self.entry_cliente.get())) #Boton busqueda de usuario
-        self.btn_buscar_cliente.pack(padx=10)
-
-        self.cantidad = Spinbox(self.frm_captura, from_=2, to=10, increment=1, font=('', 10), width=5) # To= Cantidad existente en inventario
-        self.cantidad.pack(side='left', padx=5)
-        self.lbl_codigo = Label(self.frm_captura, text='Captura de codigo de articulo:', font=('', 13))
-        self.lbl_codigo.pack(side='left', ipady=3)
-        self.entry_codigo = Entry(self.frm_captura, font=('',14),width=20)
-        self.entry_codigo.pack(side='left',fill='x', padx=10, pady=10)
-        self.btn_buscar = Button(self.frm_captura, text='  Agregar  ' ,command=lambda:self.busqueda_art(self.trvw_1,self.entry_codigo.get(), self.cantidad.get())) #Boton busqueda de usuario
-        self.btn_buscar.pack(side='left',padx=10)
-        #Presentacion de articulos
-
-        self.trvw_1 = Treeview(self.frm_tree, columns=('col1','col2'), height=23)
-        self.trvw_1.pack(side='left', fill='both', expand=1)
-
-        self.trvw_1.column("#0", width=150)
-        self.trvw_1.column("col1", width=150, anchor='center')
-        self.trvw_1.column("col2", width=30, anchor='center')
-
-        self.trvw_1.heading("#0", text='Producto', anchor='center')
-        self.trvw_1.heading("col1", text='Cantidad', anchor='center')
-        self.trvw_1.heading("col2", text='Total', anchor='center')
-        
-        self.btn_remove = Button(self.frm_button_venta, text='Remover', command=lambda:self.delete_one(self.trvw_1), state='disabled')
-        self.btn_remove.pack(pady=20)
-        self.btn_cancel = Button(self.frm_button_venta, text='Cancelar', command=lambda:self.delete_all(self.trvw_1),state='disabled')
-        self.btn_cancel.pack(pady=20)
-        self.btn_punto = Button(self.frm_button_venta, text='Descuento',state=['disabled'])
-        self.btn_punto.pack(pady=20)
-
-        if self.puesto == 'administrador' or self.puesto == 'supervisor':
-            self.btn_remove.configure(state='normal')
-            if self.puesto == 'administrador':
-                self.btn_cancel.configure(state='normal')
-
-        # Total
-
-        self.frm_lbl_total = Frame(self.frm_total, background='#c8d8da')
-        self.frm_lbl_total.pack(fill='x',expand=1)
-        self.frm_btn_total = Frame(self.frm_total, background='#c8d8da')
-        self.frm_btn_total.pack(fill='x',expand=1)
-
-        self.lbl_total = Label(self.frm_lbl_total, text='Total', font=('', 16), background='#c8d8da')
-        self.lbl_total.pack(side='left', padx=10)
-
-        self.lbl_cant = Label(self.frm_lbl_total, text=self.dinero, font=('', 16), background='#c8d8da')
-        self.lbl_cant.pack(side='right',padx=20)
-
-        self.btn_pagar = Button(self.frm_btn_total, text='  Pagar  ', command=lambda: self.pagar(self.dinero))
-        self.btn_pagar.pack(side='right', padx=10, pady=4)
-################################################################################################
-    def delete_one(self, tree): # Función para eliminar un elemento del treeview
-        x = tree.selection()[0]
-        selected = tree.focus()
-        #Guardar valores
-        values = tree.item(selected,'values')
-        dinero = int(values[1])
-        self.dinero -= dinero
-        tree.delete(x)
-        self.lbl_cant.configure(text=f'$ {self.dinero}')
-
-        pass
-
-    def delete_all(self, tree): # Función para eliminar todo del treeview
-        for record in tree.get_children():
-            tree.delete(record)
-
-    # Ventana secundaria al momento de pagar; la calculadora.
-    def pagar(self, total):
-        self.second.deiconify()
-        self.second.geometry('600x500')
-        self.frm = Frame(self.second)
-        self.frm.pack(fill='both', expand=1)
-        self.frm_1 = Frame(self.frm)
-        self.frm_1.pack(fill='both', expand=1)
-        self.frm_formas_pago = Frame(self.frm_1) #Seleccion de metodo de pago
-        self.frm_formas_pago.pack(side='left', fill='both', expand=1)
-        self.frm_calcular = Frame(self.frm_1) #Calculadora
-        self.frm_calcular.pack(side='left', fill='both', expand=1)
-        self.frm_ntr_cant = Frame(self.frm_calcular)
-        self.frm_ntr_cant.pack(fill='both', expand=1)
-        self.frm_lbl_ntr = Frame(self.frm_calcular)
-        self.frm_lbl_ntr.pack(fill='both', expand=1)
-        self.frm_lbl = Frame(self.frm_lbl_ntr)
-        self.frm_lbl.pack(side='left', fill='both', expand=1)
-        self.frm_ntr = Frame(self.frm_lbl_ntr)
-        self.frm_ntr.pack(side='left', fill='both', expand=1)
-        self.calculadora = Frame(self.frm_calcular)
-        self.calculadora.pack(fill='both', expand=1)
-        self.calculadora_1 = Frame(self.calculadora, relief='groove', border=3)
-        self.calculadora_1.pack(fill='both', expand=1)
-        self.calculadora_2 = Frame(self.calculadora,relief='groove', border=3)
-        self.calculadora_2.pack(fill='both', expand=1)
-        self.calculadora_3 = Frame(self.calculadora,relief='groove', border=3)
-        self.calculadora_3.pack(fill='both', expand=1)
-        self.calculadora_4 = Frame(self.calculadora,relief='groove', border=3)
-        self.calculadora_4.pack(fill='both', expand=1)
-        self.frm_2 = Frame(self.frm)
-        self.frm_2.pack(side='bottom', fill='both', expand=1)
-
-        self.lbl_fp = Label(self.frm_formas_pago, text='Formas de pago:',font=('',14))
-        self.lbl_fp.pack(padx=5, pady=5)
-        self.cmbbx = Combobox(self.frm_formas_pago, values=['Efectivo', 'Tarjeta de credito', 'Transferencia'], state='readonly', font=('',14))
-        self.cmbbx.pack(padx=5, pady=5)
-        self.btn_pago = Button(self.frm_formas_pago, text='Pago exacto',command=lambda: self.calculo(total))
-        self.btn_pago.pack(padx=5, pady=5)
-
-        self.entry_cant = Entry(self.frm_ntr_cant, state='disabled', font=('',25))
-        self.entry_cant.pack(padx=3, pady=5)
-        
-
-        self.lbl = Label(self.frm_lbl, text='Cantidad a pagar:', font=('',12))
-        self.lbl.pack( fill='both', expand=1)
-        self.lbl_2 = Label(self.frm_lbl, text='Cambio:',font=('',12))
-        self.lbl_2.pack( fill='both', expand=1)
-
-        self.entry = Entry(self.frm_ntr,font=('',13))
-        self.entry.pack(fill='x', pady=10)
-        self.entry.insert(0,f'${total}')
-        self.entry ['state']=['disabled']
-
-        self.entry_1 = Entry(self.frm_ntr,state='disabled',font=('',13))
-        self.entry_1.pack(fill='x', pady=10)
-
-        self.btn_cancelar = Button(self.frm_2, text='Cancelar', command=lambda:self.regreso(self.frm))
-        self.btn_cancelar.pack(side='left',fill='both', expand=1)
-        self.btn_confirmar = Button(self.frm_2, text='Confirmar', command=lambda:self.pasar(self.cmbbx.get(), self.entry_cant.get(), total))
-        self.btn_confirmar.pack(side='left',fill='both', expand=1)
-
-        #Calculadora
-        self.btn_1 = Button(self.calculadora_1, text='1',command=lambda: self.calculo(1))
-        self.btn_1.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_2 = Button(self.calculadora_2, text='2',command=lambda: self.calculo(2))
-        self.btn_2.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_3 = Button(self.calculadora_3, text='3', command=lambda: self.calculo(3))
-        self.btn_3.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_4= Button(self.calculadora_1, text='4',command=lambda: self.calculo(4))
-        self.btn_4.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_5 = Button(self.calculadora_2, text='5',command=lambda: self.calculo(5))
-        self.btn_5.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_6 = Button(self.calculadora_3, text='6', command=lambda: self.calculo(6))
-        self.btn_6.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_7 = Button(self.calculadora_1, text='7',command=lambda: self.calculo(7))
-        self.btn_7.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_8 = Button(self.calculadora_2, text='8',command=lambda: self.calculo(8))
-        self.btn_8.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_9 = Button(self.calculadora_3, text='9', command=lambda: self.calculo(9))
-        self.btn_9.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-
-        self.btn_borrar = Button(self.calculadora_4, text='<=')
-        self.btn_borrar.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_0 = Button(self.calculadora_4, text='0',command=lambda: self.calculo(0))
-        self.btn_0.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        self.btn_00 = Button(self.calculadora_4, text='00', command=lambda: self.calculo('00'))
-        self.btn_00.pack(side='left',ipadx=3, ipady=3, fill='both', expand=1)
-        
-
-    ###############################################################################################
-    def pasar(self, opcion, pagado, debe):
-        pagado = str(pagado)
-        debe = str(debe)
-        print(opcion)
-        if opcion != '' and pagado == debe:
-            self.emergente(debe, pagado)
-        elif pagado != debe:
-            pass
-        elif opcion == '':
-            messagebox.showinfo(title='Datos incompletos', message='Verifique la forma de pago')
-
-    def calculo(self, value):
-        value = str(value)
-        self.entry_cant ['state'] = ['normal']
-        self.entry_cant.insert('end',value)
-        print(value)
-        self.entry_cant ['state'] = ['disabled']
-
-    def emergente(self, debe, pagado):
-        debe == 0
-        pagado.clear()
-        messagebox.showinfo(title='Compra confirmada', message='¡Gracias por su compra!')
-    
-    # Ejecución de la segunda ventana.
-    def second_window(self,necesidad, puesto):
-        self.withdraw()
-        self.second.deiconify()
-        self.second.geometry('1000x600')
-        self.frm_principal = Frame(self.second)
-        self.frm_principal.pack(fill='both', expand=1)
-        self.frm_lateral = Frame(self.frm_principal, border=3, relief='groove')
-        self.frm_lateral.pack(fill='y',side='left', ipady=10)
-        self.frm_info = Frame(self.frm_principal)
-        self.frm_info.pack(fill='both', expand=1)
-        self.frm_contenido_sup = Frame(self.frm_info, border=3, relief='groove')
-        self.frm_contenido_sup.pack(fill='both', expand=1)
-        self.frm_contenido_inf = Frame(self.frm_info, border=3, relief='groove')
-        self.frm_contenido_inf.pack(fill='both', expand=1)
-        self.opcion(necesidad,self.frm_principal,self.frm_lateral, self.frm_contenido_sup, self.frm_contenido_inf, puesto)
-
-    def opcion(self,necesidad,frm_principal, frm_lateral, frm_sup,frm_inf,puesto):
-        if necesidad == 1:
-            self.clientes(frm_principal, frm_lateral, frm_sup, frm_inf, puesto)
-        elif necesidad == 2:
-            self.abasto(frm_principal, frm_lateral, frm_sup, frm_inf)                 ##################################
-        elif necesidad == 3:                                                           #################################
-            self.configure(frm_principal, frm_lateral, frm_sup, frm_inf, puesto)          #############################
-        elif necesidad == 4:                                                            ##################
-            self.agregar_producto(frm_principal, frm_lateral, frm_sup, frm_inf, puesto) ###################
-    
-    def clientes(self,frm_principal, frm_lateral, frm_sup, frm_inf, puesto):
         #Barra lateral
-        self.second.geometry('1100x600')
-        self.btn_agregar_clientes = Button(frm_lateral, text="Registrar") #Tambien para buscar
+        self.ventana.geometry('1300x600')
+        self.btn_agregar_clientes = Button(self.frm_lateral, text="Registrar", command=lambda: self.on(self.btn_aceptar,self.btn_cancelar, self.entry_name
+            , self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero, 'agregar'))
         self.btn_agregar_clientes.pack(pady=20, padx=3)
-        self.btn_buscar_clientes = Button(frm_lateral, text="Buscar")
-        self.btn_buscar_clientes.pack(pady=20, padx=3)
-        self.btn_modificar_clientes = Button(frm_lateral, text="Modificar", command=lambda:self.select_record(self.trvw_clientes,self.btn_aceptar), state='disabled')
+        self.btn_modificar_clientes = Button(self.frm_lateral, text="Modificar", state='disabled',command=lambda:self.select_record(self.trvw_clientes, self.btn_aceptar))
         self.btn_modificar_clientes.pack(pady=20, padx=3)
-        self.btn_eliminar_clientes = Button(frm_lateral, text="Eliminar", command=lambda:self.eliminar_clientes, state='disabled')
+        self.btn_eliminar_clientes = Button(self.frm_lateral, text="Eliminar", state='disabled', command=lambda: self.confirmar())
         self.btn_eliminar_clientes.pack(pady=20, padx=3)
         
-        self.btn_regreso = Button(frm_lateral, text='Regresar', command=lambda: self.regreso(frm_principal))
+        self.btn_regreso = Button(self.frm_lateral, text='Regresar', command=lambda: POS.regreso(self,self.frm_principal, self.ventana, self.btn_1, self.btn_2,self.btn_3))
         self.btn_regreso.pack(side='bottom',pady=20, padx=3)
         
         #Botones sup
-        self.frm_botones = Frame(frm_sup)
+        self.frm_botones = Frame(self.frm_sup)
         self.frm_botones.pack(side='bottom')
         self.btn_aceptar = Button(self.frm_botones, text='Aceptar', state='disabled')
         self.btn_aceptar.pack(side='left',padx=10, pady=5)
         self.btn_cancelar = Button(self.frm_botones, text='Cancelar', state='disabled')
         self.btn_cancelar.pack(side='left',padx=10,ipadx=5)
-
         #Contenido clientes
         #sup
+        self.new_window = Toplevel()  
+        self.new_window.geometry('250x150')
+        self.new_window.withdraw() 
+        self.new_window.protocol('WM_DELETE_WINDOW', lambda:None)
+
+        self.frm_info_1 = Frame(self.frm_sup)
+        self.frm_info_1.pack(fill='x',expand=1, pady=5)
+        self.frm_info_2 = Frame(self.frm_sup)
+        self.frm_info_2.pack(fill='x',expand=1, pady=5)
+        self.frm_info_3 = Frame(self.frm_sup)
+        self.frm_info_3.pack( fill='x',expand=1, pady=5)
+
+        self.name = StringVar()
+        self.lbl_name, self.entry_name = POS.createWidgets(self,
+            self.frm_info_1, 'Nombre:', self.name, 'disabled')
+ 
+        self.entry_name.bind('<Return>', lambda event:  self.entry_apellido_1.focus_set())
+        self.entry_name.bind('<Escape>', lambda event: self.entry_name.delete(0, 'end'))
+        #self.entry_name.bind('<KeyRelease>', checkEntryLen())
+        self.entry_name.focus()
+
+        self.apellido_1 = StringVar()
+        self.lbl_apellido_1, self.entry_apellido_1 = POS.createWidgets(self,
+            self.frm_info_1, 'Apellido paterno', self.apellido_1, 'disabled')
+ 
+        self.entry_apellido_1.bind('<Return>', lambda event: self.entry_apellido_2.focus_set())
+        self.entry_apellido_1.bind('<Escape>', lambda event: self.entry_apellido_1.delete(0, 'end'))
+
+        self.apellido_2 = StringVar()
+        self.lbl_apellido_2, self.entry_apellido_2 = POS.createWidgets(self,
+            self.frm_info_1, 'Apellido materno:', self.apellido_2, 'disabled')
+ 
+        self.entry_apellido_2.bind('<Return>', lambda event:  self.entry_email.focus_set())
+        self.entry_apellido_2.bind('<Escape>', lambda event: self.entry_apellido_2.delete(0, 'end'))
+  
+        self.email = StringVar()
+        self.lbl_email, self.entry_email = POS.createWidgets(self,
+            self.frm_info_2, 'Correo electrónico:', self.email, 'disabled')
+        self.entry_email.bind('<Return>', lambda event:  self.entry_nacimiento.focus_set())
+        self.entry_email.bind('<Escape>', lambda event: self.entry_email.delete(0, 'end'))
+ 
+        self.nacimiento = StringVar()
+        self.lbl_nacimiento, self.entry_nacimiento = POS.createWidgets(self,
+            self.frm_info_3, 'Nacimiento:', self.nacimiento, 'disabled')
+        self.entry_nacimiento.bind('<Return>', lambda event:  self.entry_numero.focus_set())
+        self.entry_nacimiento.bind('<Escape>', lambda event: self.entry_nacimiento.delete(0, 'end'))
+
+        self.numero = StringVar()
+        self.lbl_numero, self.entry_numero = POS.createWidgets(self,
+            self.frm_info_3, 'Número:', self.numero, 'disabled')
+        self.entry_numero.bind('<Return>', lambda event: self.btn_save.focus_set())
+        self.entry_numero.bind('<Escape>', lambda event: self.entry_numero.delete(0, 'end'))
 
         #inf
-        self.cursor.execute("Select ID, `Apellido paterno`, `Apellido materno`, `Nombre(s)`, DATE_FORMAT(Nacimiento, '%d/%m/%Y'), Teléfono, email, Puntos from clientes")
+        self.scrbl = Scrollbar(self.frm_inf)
         
-        # Elaboración de la tabla de clientes a través de un treeview.
-        self.trvw_clientes = Treeview(frm_inf)
+        self.cursor.execute("Select ID, `Apellido paterno`, `Apellido materno`, `Nombre(s)`, DATE_FORMAT(Nacimiento, '%d/%m/%Y'), Teléfono, email, Puntos from clientes")
+
+        self.trvw_clientes = Treeview(self.frm_inf, yscrollcommand=self.scrbl.set,selectmode='browse')
         self.trvw_clientes['show'] = 'headings'
 
         self.trvw_clientes["columns"] = ("ID", "Apellido paterno", "Apellido materno", "Nombre(s)", "Nacimiento", "Teléfono", "email", "Puntos")
@@ -456,14 +136,32 @@ class POS(Tk):
         self.trvw_clientes.heading("Teléfono", text = "Teléfono", anchor='center')
         self.trvw_clientes.heading("email", text = "Email", anchor='center')
         self.trvw_clientes.heading("Puntos", text = "Puntos", anchor='center')
+        self.scrbl.pack(side='right', fill='y')
+        self.scrbl.config(command=self.trvw_clientes.yview)
 
         i = 0
         for ro in self.cursor:
             self.trvw_clientes.insert('', i, text="", values = (ro[0], ro[1], ro[2], ro[3], ro[4], ro[5], ro[6], ro[7]) )
             i += 1
 
-        self.trvw_clientes.pack(side='left', fill='both', expand=1)
-        self.entrada_inf(self.btn_aceptar,self.btn_cancelar, 3, self.btn_agregar_clientes, self.btn_buscar_clientes, self.btn_eliminar_clientes, puesto, frm_sup)
+        self.trvw_clientes.pack(fill='both', expand=1)
+
+        self.trvw_clientes.bind("<<TreeviewSelect>>",lambda e:self.active(self.btn_eliminar_clientes, self.btn_modificar_clientes))
+
+        if self.puesto == 'administrador':
+            self.btn_modificar_clientes ['state'] = ['normal']
+            self.btn_eliminar_clientes ['state'] = ['normal']
+
+    def confirmar(self):
+        opcion = messagebox.askyesno(title='Accion irreversible',message='¿Esta seguro de realizar esta opción?', parent=self.ventana)
+        print(opcion)
+        if opcion == True:
+            POS.delete_one(self,self.trvw_clientes, self.btn_eliminar_clientes, 'clientes')
+
+
+    def active(self, btn_delete, btn_modify):
+        btn_delete ['state'] = ['normal']
+        btn_modify ['state'] = ['normal']
         
     def delete_entrys(self):
         self.entry_name.delete(0,'end')
@@ -473,6 +171,18 @@ class POS(Tk):
         self.entry_nacimiento.delete(0,'end')
         self.entry_numero.delete(0,'end')
 
+    def on(self, btn_yes, btn_no, entry_0,entry_1,entry_2,entry_3,entry_4,entry_5, opcion):
+        btn_yes ['state'] = ['normal']
+        btn_no ['state'] = ['normal']
+        entry_0 ['state'] = ['normal']
+        entry_1 ['state'] = ['normal']
+        entry_2 ['state'] = ['normal']
+        entry_3 ['state'] = ['normal']
+        entry_4 ['state'] = ['normal']
+        entry_5 ['state'] = ['normal']
+        if opcion == 'agregar':
+            btn_yes.configure(command=lambda: self.verify_info())
+        
     def select_record(self, tree, btn):
         #Delete entrys boxes
         self.delete_entrys()
@@ -480,7 +190,6 @@ class POS(Tk):
         selected = tree.focus()
         #Guardar valores
         values = tree.item(selected,'values')
-
         self.entry_name.insert(0,values[3])
         self.entry_apellido_1.insert(0,values[1])
         self.entry_apellido_2.insert(0,values[2])
@@ -489,349 +198,266 @@ class POS(Tk):
         self.entry_numero.insert(0,values[5])
         btn.configure(command=lambda: self.update_record(self.entry_apellido_1.get(),self.entry_apellido_2.get(),self.entry_name.get(),
                         self.entry_nacimiento.get(), self.entry_numero.get(), self.entry_email.get()))
-                        
-    # Función para modificar datos dentro de la base de datos.
-    def update_record(self, apellido_1,apellido_2,name,nacimiento,num,email):
-        process = self.verify_entrys()
-        if process == 'ok':
-            fechadate = datetime.strptime(nacimiento, '%d/%m/%Y')
-            selected = self.trvw_clientes.focus()
-            consulta = """UPDATE clientes SET `Apellido Paterno`  = %s,
-                     `Apellido Materno` = %s, `Nombre(s)` = %s, Nacimiento = %s,
-                      Teléfono = %s, email = %s WHERE id = %s ;"""
-            values = (apellido_1,apellido_2,name,fechadate,num,email, selected)
-
-            self.cursor.execute(consulta, (apellido_1, apellido_2, name, fechadate, num, email, selected))
-            self.db.commit()
-            self.trvw_clientes.item(selected, text='', values=(selected,values[0],values[1],values[2],nacimiento,values[4],values[5]))
-            self.delete_entrys()
-    
-    # Función que habilita las pestañas conforme al puesto que tiene usuario.
-    def activar_frm_sup(self,btn_a, btn_c,opc, e_1, e_2, e_3, e_4, e_5, e_6, btn_1,btn_2, btn_3, puesto):
-        self.delete_entrys()
-        if opc == 1 or opc == 2:
-            btn_a ['state'] = ['normal']
-            btn_c ['state'] = ['normal']
-            e_1 ['state'] = ['normal']
-            e_2  ['state'] = ['normal']
-            e_3 ['state'] = ['normal']
-            e_4 ['state'] = ['normal']
-            e_5 ['state'] = ['normal']
-            e_6 ['state'] = ['normal']
-            if opc == 2:
-                btn_1 ['state'] = ['disabled']
-                btn_2 ['state'] = ['normal']
-                if puesto == 'administrador':
-                    btn_3 ['state'] = ['normal']
-        elif opc == 3:
-            btn_a ['state'] = ['disabled']
-            btn_c ['state'] = ['disabled']
-            e_1 ['state'] = ['disabled']
-            e_2  ['state'] = ['disabled']
-            e_3 ['state'] = ['disabled']
-            e_4 ['state'] = ['disabled']
-            e_5 ['state'] = ['disabled']
-            e_6 ['state'] = ['disabled']
-            btn_1 ['state'] = ['normal']
-            btn_2 ['state'] = ['disabled']
-            if puesto == 'administrador':
-                btn_3 ['state'] = ['disabled']
-
-
-    def createWidgets(self,frm, lbl_txt, strvar, opc):
-            if opc == 'disabled':
-                self.lbl = Label(frm, text=lbl_txt,font=('',13))
-                self.lbl.pack(side='left', padx=3)
-                self.entry = Entry(frm, textvariable=strvar, state='disabled')
-                self.entry.pack(side='left', fill='x', expand=1)
-            else:
-                self.lbl = Label(frm, text=lbl_txt,font=('',13))
-                self.lbl.pack(side='left', padx=3)
-                self.entry = Entry(frm, textvariable=strvar, state='normal')
-                self.entry.pack(side='left', fill='x', expand=1)
-            
-            return (self.lbl, self.entry)
-
-    def entrada_inf(self,btn,btn_c,opc, btn_1,btn_2, btn_3, puesto, frm_sup): #Funcion de widgets clientes y botones
         
-        # Ingreso de datos dentro de la base de datos tras la validación.
-        def Cliente_database():
-            fechadate = datetime.strptime(self.dic['birth'], '%d/%m/%Y')
-            valores = (
-            self.dic['apellido_paterno'],
-            self.dic['apellido_materno'],
-            self.dic['name'],
-            fechadate,
-            self.dic['number'],
-            self.dic['email'],
-            0
-            )
-            try:
-                consulta = ("Insert into Clientes(`Apellido paterno`, `Apellido materno`, `Nombre(s)`, Nacimiento, Teléfono, email, Puntos) values (%s, %s, %s, %s, %s, %s, %s)")
-                self.cursor.execute(consulta, valores)
-                self.db.commit()
-            except:
-                messagebox.showwarning('Datos repetidos', 'El correo o el número telefónico ya existen en el sistema.')         
+    def Ingreso_Clientes(self):
+        fechadate = datetime.strptime(self.dic['birth'], '%d/%m/%Y')
+        consulta = ("INSERT INTO clientes (`Apellido paterno`, `Apellido materno`, `Nombre(s)`, `Nacimiento`, `Teléfono`, `email`, `Puntos`) VALUES (%s, %s, %s, %s, %s, %s, %s);")
+        values = (
+        self.dic['apellido_paterno'],
+        self.dic['apellido_materno'],
+        self.dic['name'],
+        fechadate,
+        self.dic['number'],
+        self.dic['email'],
+        0)
 
-        
-        def verify_info(btn,btn_c,opc, btn_1,btn_2, btn_3, puesto): # botton
-            if verify_entrys() == 'ok':
-                self.new_window.deiconify() 
-                self.frm_show_data = Frame(self.new_window)
-                self.frm_show_data.pack() 
-                self.lbl_show_name = Label(self.frm_show_data, text=f'Nombre: {self.entry_name.get()}')
-                self.lbl_show_name.pack()
-                self.lbl_show_email = Label(
-                self.frm_show_data, text=f'Correo electrónico: {self.entry_email.get()}')
-                self.lbl_show_email.pack()
-                self.lbl_show_nacimiento = Label(
-                    self.frm_show_data, text=f'nacimiento: {self.entry_nacimiento.get()}')
-                self.lbl_show_nacimiento.pack()
-                self.lbl_show_numero = Label(
-                    self.frm_show_data, text=f'numero: {self.entry_numero.get()}')
-                self.lbl_show_numero.pack()
-     
-                self.frm_show_buttons = Frame(self.new_window)
-                self.frm_show_buttons.pack()
-  
-                self.btn_back = Button(self.frm_show_buttons, text='Regresar')
-                self.btn_back.pack(side='left', padx=5)
-                self.btn_save = Button(self.frm_show_buttons,text='Guardar información')
-                self.btn_save.pack(side='left', padx=5)
-                
-                self.btn_back.configure(command=lambda: salir(self.frm_show_data, self.frm_show_buttons))
-                self.btn_save.configure(command=lambda: salvar_inf(self.frm_show_data, self.frm_show_buttons))
-                #self.activar_frm_sup(btn,btn_c,opc, self.entry_name, self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero, btn_1,btn_2, btn_3, puesto)
-        
-        # Función para el registro de los clientes dentro de la base de datos.
-        def do_registry():
-            self.dic = {}
-            self.dic['name'] = self.fullname.get()
-            self.dic['apellido_paterno'] = self.apellido_1.get()
-            self.dic['apellido_materno'] = self.apellido_2.get()
-            self.dic['email'] = self.email.get().lower()
-            self.dic['birth'] = self.nacimiento.get()
-            self.dic['number'] = self.numero.get()
-            Cliente_database() # Ejecución de la función para el ingreso de datos dentro de la base de datos.
-            self.data.append(self.dic)
-            self.entry_name.delete(0, 'end')
-            self.entry_apellido_1.delete(0, 'end')
-            self.entry_apellido_2.delete(0, 'end')
-            self.entry_email.delete(0, 'end')
-            self.entry_nacimiento.delete(0, 'end')
-            self.entry_numero.delete(0, 'end')
-            self.entry_name.focus()
-            print(self.dic)
-        
-        # Función para verificar los datos ingresados en los entry's para que sean accesibles a la base de datos.
-        def verify_entrys():
-            vnm = ''.join(char for char in self.fullname.get() if char.isalpha() or char == ' ')
-            vap = ''.join(char for char in self.apellido_1.get() if char.isalpha() or char == ' ')
-            vam = ''.join(char for char in self.apellido_2.get() if char.isalpha() or char == ' ')
- 
-            if self.fullname.get() != vnm or len(self.fullname.get()) == 0 or self.fullname.get()[0] == ' ':
-                messagebox.showerror('Datos inválidos', 'Por favor, introduce solo nombres.')
-            elif self.apellido_1.get() != vap or len(self.apellido_1.get()) == 0 or self.fullname.get() == ' ':
-                messagebox.showerror('Datos inválidos', 'Por favor, introduce un apellido válido.')
-            elif self.apellido_2.get() != vam or len(self.apellido_2.get()) == 0 or self.fullname.get()[0] == ' ':
-                messagebox.showerror('Datos inválidos', 'Por favor, introduce un apellido válido.')
-            elif '@' not in self.email.get() or '.com' not in self.email.get():
-                messagebox.showerror('Datos inválidos', 'Por favor, introduce un correo válido.')
-            elif self.nacimiento.get().find('/') != 2 or self.nacimiento.get().rfind('/') != 5 or len(self.nacimiento.get()) != 10:
-                messagebox.showwarning('Escritura', 'Por favor, escribe la fecha de la siguiente manera: dd/mm/aaaa')
-            elif self.numero.get().isdigit == 0 or len(self.numero.get()) != 10:
-                messagebox.showerror('Datos inválidos', 'Por favor, introduce un número telefónico válido.')
-            else:
-                fecha = self.nacimiento.get()
-                for i in range(len(fecha)):
-                    if fecha[i].isdigit() == 0 and fecha[i] != '/':
+        self.cursor.execute(consulta, values)
+        self.db.commit()
+
+    def do_registry(self):
+        self.dic = {}
+        self.dic['name'] = self.name.get()
+        self.dic['apellido_paterno'] = self.apellido_1.get()
+        self.dic['apellido_materno'] = self.apellido_2.get()
+        self.dic['email'] = self.email.get()
+        self.dic['birth'] = self.nacimiento.get()
+        self.dic['number'] = self.numero.get()
+        self.Ingreso_Clientes()
+        self.data.append(self.dic)
+        self.entry_name.delete(0, 'end')
+        self.entry_apellido_1.delete(0, 'end')
+        self.entry_apellido_2.delete(0, 'end')
+        self.entry_email.delete(0, 'end')
+        self.entry_nacimiento.delete(0, 'end')
+        self.entry_numero.delete(0, 'end')
+        self.entry_name.focus()
+        print(self.dic)
+
+    def verify_date(self):
+        fecha = self.nacimiento.get()
+        for i in range(len(fecha)):
+            if fecha[i].isdigit() == 0 and fecha[i] != '/':
+                messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                break
+            elif fecha[i].isdigit() == 1:
+                if i == 0:
+                    if int(fecha[i]) < 0 or int(fecha[i]) > 3:
                         messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
                         break
-                    elif fecha[i].isdigit() == 1:
-                        if i == 0:
-                            if int(fecha[i]) < 0 or int(fecha[i]) > 3:
+                elif i == 1:
+                    if int(fecha[0]) == 3 and int(fecha[i]) > 1:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break
+                elif i == 3:                   
+                    if int(fecha[i]) < 0 or int(fecha[i]) > 1:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break
+                elif i == 4:
+                    if int(fecha[3]) == 0:
+                        if int(fecha[i]) == 2: 
+                            if int(fecha[0]) > 2 or (int(fecha[0]) == 2 and int(fecha[1]) == 9):
                                 messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
                                 break
-                        elif i == 1:
-                            if int(fecha[0]) == 3 and int(fecha[i]) > 1:
+                        elif int(fecha[i]) == 4 or int(fecha[i]) == 6 or int(fecha[i]) == 9:
+                            if int(fecha[0]) == 3 and int(fecha[1]) > 0:
                                 messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
                                 break
-                        elif i == 3:                   
-                            if int(fecha[i]) < 0 or int(fecha[i]) > 1:
+                    elif int(fecha[3]) == 1:
+                        if int(fecha[i]) == 1:
+                            if int(fecha[0]) == 3 and int(fecha[1]) > 0:
                                 messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
                                 break
-                        elif i == 4:
-                            if int(fecha[3]) == 0:
-                                if int(fecha[i]) == 2: 
-                                    if int(fecha[0]) > 2 or (int(fecha[0]) == 2 and int(fecha[1]) == 9):
-                                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                        break
-                                elif int(fecha[i]) == 4 or int(fecha[i]) == 6 or int(fecha[i]) == 9:
-                                    if int(fecha[0]) == 3 and int(fecha[1]) > 0:
-                                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                        break
-                            elif int(fecha[3]) == 1:
-                                if int(fecha[i]) == 1:
-                                    if int(fecha[0]) == 3 and int(fecha[1]) > 0:
-                                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                        break
-                                elif int(fecha[i]) > 2:
-                                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                        break
-                        elif i == 6:                   
-                            if int(fecha[i]) < 1 or int(fecha[i]) > 2:
+                        elif int(fecha[i]) > 2:
                                 messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
                                 break
-                        elif i == 7:                   
-                            if int(fecha[6]) == 1 and int(fecha[i]) < 9:
-                                messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                break
-                            elif int(fecha[6]) == 2 and int(fecha[i]) > 0:
-                                messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                break 
-                        elif i == 8:
-                            if int(fecha[7]) == 0 and int(fecha[i]) > 2:
-                                messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
-                                break
-                        elif i == 9:
+                elif i == 6:                   
+                    if int(fecha[i]) < 1 or int(fecha[i]) > 2:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break
+                elif i == 7:                   
+                    if int(fecha[6]) == 1 and int(fecha[i]) < 9:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break
+                    elif int(fecha[6]) == 2 and int(fecha[i]) > 0:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break 
+                elif i == 8:
+                    if int(fecha[7]) == 0 and int(fecha[i]) > 2:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce una fecha válida.')
+                        break
+                elif i == 9:
+                    return 'ok'
+
+
+    def verify_entrys(self):
+        vnm = ''.join(char for char in self.name.get() if char.isalpha() or char == ' ')
+        vap = ''.join(char for char in self.apellido_1.get() if char.isalpha() or char == ' ')
+        vam = ''.join(char for char in self.apellido_2.get() if char.isalpha() or char == ' ')
+
+        if self.name.get() != vnm or len(self.name.get()) == 0 or self.name.get()[0] == ' ':
+            messagebox.showerror('Datos inválidos', 'Por favor, introduce solo nombres.')
+        elif self.apellido_1.get() != vap or len(self.apellido_1.get()) == 0 or self.name.get() == ' ':
+            messagebox.showerror('Datos inválidos', 'Por favor, introduce un apellido válido.')
+        elif len(self.apellido_2.get()) != 0:
+            if self.apellido_2.get() != vam or self.name.get()[0] == ' ':
+                messagebox.showerror('Datos inválidos', 'Por favor, introduce un apellido válido.')
+            else: 
+                if len(self.email.get()) != 0:
+                    if '@' not in self.email.get() or '.com' not in self.email.get():
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce un correo válido.')
+                    else:
+                        if self.nacimiento.get().find('/') != 2 or self.nacimiento.get().rfind('/') != 5 or len(self.nacimiento.get()) != 10:
+                            messagebox.showwarning('Escritura', 'Por favor, escribe la fecha de la siguiente manera: dd/mm/aaaa')
+                        elif len(self.numero.get()) != 0:
+                            if self.numero.get().isdigit == 0 or len(self.numero.get()) != 10:
+                                messagebox.showerror('Datos inválidos', 'Por favor, introduce un número telefónico válido.')
+                            else:
+                                if self.verify_date() == 'ok':
+                                    return 'ok'
+                        else:
+                            if self.verify_date() == 'ok':
+                                return 'ok'
+                elif self.nacimiento.get().find('/') != 2 or self.nacimiento.get().rfind('/') != 5 or len(self.nacimiento.get()) != 10:
+                    messagebox.showwarning('Escritura', 'Por favor, escribe la fecha de la siguiente manera: dd/mm/aaaa')
+                elif len(self.numero.get()) != 0:
+                    if self.numero.get().isdigit == 0 or len(self.numero.get()) != 10:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce un número telefónico válido.')
+                    else:
+                        if self.verify_date() == 'ok':
                             return 'ok'
+                else:
+                        if self.verify_date() == 'ok':
+                            return 'ok'
+        elif len(self.email.get()) != 0:
+            if '@' not in self.email.get() or '.com' not in self.email.get():
+                messagebox.showerror('Datos inválidos', 'Por favor, introduce un correo válido.')
+            else:
+                if self.nacimiento.get().find('/') != 2 or self.nacimiento.get().rfind('/') != 5 or len(self.nacimiento.get()) != 10:
+                    messagebox.showwarning('Escritura', 'Por favor, escribe la fecha de la siguiente manera: dd/mm/aaaa')
+                elif len(self.numero.get()) != 0:
+                    if self.numero.get().isdigit == 0 or len(self.numero.get()) != 10:
+                        messagebox.showerror('Datos inválidos', 'Por favor, introduce un número telefónico válido.')
+                    else:
+                        if self.verify_date() == 'ok':
+                            return 'ok'
+                else:
+                    if self.verify_date() == 'ok':
+                        return 'ok'
+        elif self.nacimiento.get().find('/') != 2 or self.nacimiento.get().rfind('/') != 5 or len(self.nacimiento.get()) != 10:
+                    messagebox.showwarning('Escritura', 'Por favor, escribe la fecha de la siguiente manera: dd/mm/aaaa')
+        elif len(self.numero.get()) != 0:
+            if self.numero.get().isdigit == 0 or len(self.numero.get()) != 10:
+                messagebox.showerror('Datos inválidos', 'Por favor, introduce un número telefónico válido.')
+            else:
+                if self.verify_date() == 'ok':
+                    return 'ok'
+        else:
+            if self.verify_date() == 'ok':
+                return 'ok'
 
+    def verify_info(self): # botton
+        if self.verify_entrys() == 'ok':
+            self.new_window.deiconify() 
+            self.frm_show_data = Frame(self.new_window)
+            self.frm_show_data.pack() 
+            self.lbl_show_name = Label(self.frm_show_data, text=f'Nombre: {self.entry_name.get()}')
+            self.lbl_show_name.pack()
+            self.lbl_show_apellido_1 = Label(self.frm_show_data, text=f'Apellido paterno: {self.entry_apellido_1.get()}')
+            self.lbl_show_apellido_1.pack()
+            self.lbl_show_apellido_2 = Label(self.frm_show_data, text=f'Apellido materno: {self.entry_apellido_2.get()}')
+            self.lbl_show_apellido_2.pack()
+            self.lbl_show_email = Label(
+                self.frm_show_data, text=f'Correo electrónico: {self.entry_email.get()}')            
+            self.lbl_show_email.pack()
+            self.lbl_show_nacimiento = Label(
+                self.frm_show_data, text=f'Nacimiento: {self.entry_nacimiento.get()}')
+            self.lbl_show_nacimiento.pack()
+            self.lbl_show_numero = Label(
+                self.frm_show_data, text=f'Número: {self.entry_numero.get()}')
+            self.lbl_show_numero.pack()
+    
+            self.frm_show_buttons = Frame(self.new_window)
+            self.frm_show_buttons.pack()
 
+            self.btn_back = Button(self.frm_show_buttons, text='Regresar',command=lambda: self.back(self.frm_show_data, self.frm_show_buttons))
+            self.btn_back.pack()
+            self.btn_save = Button(self.frm_show_buttons,text='Guardar información', command=lambda: self.save_info(self.frm_show_data, self.frm_show_buttons))
+            self.btn_save.pack()
 
-        def salir(frm1, frm2):
-            #  '''Función para ocultar la ventana secundaria y mostrar la ventana principal'''
-            self.new_window.withdraw() 
-           # self.deiconify() 
-            self.entry_name.focus()
-            frm1.destroy() 
-            frm2.destroy() 
-                      
-        def salvar_inf(frm1, frm2):
-            # '''Función para guardar los datos de usuario en la lista
-
-            # NOTA: Los datos se guardarán en forma de diccionario, bajo las siguientes llaves:
-            # name, email, course, teacher.'''
-            do_registry()
-            salir(frm1, frm2)
-
-        self.new_window = Toplevel()  
-        self.new_window.geometry('250x150')
+    def back(self,frm1, frm2):
+        #  '''Función para ocultar la ventana secundaria y mostrar la ventana principal'''
         self.new_window.withdraw() 
-        self.new_window.protocol('WM_DELETE_WINDOW', lambda event: salir(self.frm_show_data, self.frm_show_buttons))
-        
-        self.frm_info_1 = Frame(frm_sup)
-        self.frm_info_1.pack(fill='x',expand=1)
-        self.frm_info_2 = Frame(frm_sup)
-        self.frm_info_2.pack(fill='x',expand=1)
-        self.frm_info_3 = Frame(frm_sup)
-        self.frm_info_3.pack( fill='x',expand=1)
-
-        
-        btn_1.configure(command=lambda:self.activar_frm_sup(self.btn_aceptar,self.btn_cancelar, 1, self.entry_name,
-            self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero, 'a', 'b', 'c', self.puesto)) #Tambien para buscar
-        btn_2.configure(command=lambda:self.activar_frm_sup(self.btn_aceptar,self.btn_cancelar, 2, self.entry_name,
-            self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero,self.btn_agregar_clientes, self.btn_modificar_clientes, self.btn_eliminar_clientes,self.puesto))
-        btn_c.configure(command=lambda:self.activar_frm_sup(self.btn_aceptar,self.btn_cancelar, 3, self.entry_name,
-            self.entry_apellido_1, self.entry_apellido_2, self.entry_email, self.entry_nacimiento, self.entry_numero,self.btn_agregar_clientes, self.btn_modificar_clientes, self.btn_eliminar_clientes, self.puesto))
-        
-        # Creación de los entrys y labels dentro de la ventana.
-        self.fullname = StringVar()
-        self.lbl_name, self.entry_name = self.createWidgets(
-            self.frm_info_1, 'Nombre:', self.fullname, 'disabled')
- 
-        self.entry_name.bind('<Return>', lambda event:  self.entry_apellido_1.focus_set())
-        self.entry_name.bind('<Escape>', lambda event: self.entry_name.delete(0, 'end'))
-        #self.entry_name.bind('<KeyRelease>', checkEntryLen())
+        # self.deiconify() 
         self.entry_name.focus()
+        frm1.destroy() 
+        frm2.destroy() 
+                      
+    def save_info(self,frm1, frm2):
+        # '''Función para guardar los datos de usuario en la lista
 
-        self.apellido_1 = StringVar()
-        self.lbl_apellido_1, self.entry_apellido_1 = self.createWidgets(
-            self.frm_info_1, 'Apellido paterno', self.apellido_1, 'disabled')
- 
-        self.entry_apellido_1.bind('<Return>', lambda event: self.entry_apellido_2.focus_set())
-        self.entry_apellido_1.bind('<Escape>', lambda event: self.entry_apellido_1.delete(0, 'end'))
+        # NOTA: Los datos se guardarán en forma de diccionario, bajo las siguientes llaves:
+        # name, email, course, teacher.'''
+        self.do_registry()
+        self.back(frm1, frm2)
 
-        self.apellido_2 = StringVar()
-        self.lbl_apellido_2, self.entry_apellido_2 = self.createWidgets(
-            self.frm_info_1, 'Apellido materno:', self.apellido_2,'disabled')
- 
-        self.entry_apellido_2.bind('<Return>', lambda event:  self.entry_email.focus_set())
-        self.entry_apellido_2.bind('<Escape>', lambda event: self.entry_apellido_2.delete(0, 'end'))
-  
-        self.email = StringVar()
-        self.lbl_email, self.entry_email = self.createWidgets(
-            self.frm_info_2, 'Correo electrónico:', self.email,'disabled')
-        self.entry_email.bind('<Return>', lambda event:  self.entry_nacimiento.focus_set())
-        self.entry_email.bind('<Escape>', lambda event: self.entry_email.delete(0, 'end'))
-        #self.entry_email.bind('<KeyRelease>', checkEntryLen())
- 
-        self.nacimiento = StringVar()
-        self.lbl_nacimiento, self.entry_nacimiento = self.createWidgets(
-            self.frm_info_3, 'Nacimiento:', self.nacimiento,'disabled')
-        self.entry_nacimiento.bind('<Return>', lambda event:  self.entry_numero.focus_set())
-        self.entry_nacimiento.bind('<Escape>', lambda event: self.entry_nacimiento.delete(0, 'end'))
-        #self.entry_nacimiento.bind('<KeyRelease>', checkEntryLen())
-        self.numero = StringVar()
-        self.lbl_numero, self.entry_numero = self.createWidgets(
-            self.frm_info_3, 'Número:', self.numero,'disabled')
-        self.entry_numero.bind('<Return>', lambda event: self.btn_save.focus_set())
-        self.entry_numero.bind('<Escape>', lambda event: self.entry_numero.delete(0, 'end'))
-        self.myStyle = Style()
-        self.myStyle.configure('frm.TFrame', relief='ridge', borderwidth=5)
-        self.myStyle.configure('lbl_form.TLabel',
-            borderwidth=2, relief='groove')
-        self.myStyle.configure('entry_form.TEntry')
-        self.myStyle.configure('btns.TButton', foreground='#ffffff',
-            background='#14ff10', highlightbackground='#000000') 
-        btn.configure(command=lambda:verify_info(btn,btn_c,opc, btn_1,btn_2, btn_3, puesto))
-                
-    def regreso(self, frm): #retonoro de segunda a primera ventana
-        frm.destroy()
-        self.second.withdraw()
-        self.deiconify()
+class Abasto():
+    def __init__(self,ventana,frm_principal, frm_lateral, frm_sup, frm_inf, btn_1, btn_2,btn_3, puesto):
+        self.frm_principal = frm_principal
+        self.frm_lateral = frm_lateral
+        self.frm_sup = frm_sup
+        self.frm_inf = frm_inf
+        self.ventana = ventana
+        self.btn_1 = btn_1
+        self.btn_2 = btn_2
+        self.btn_3 = btn_3
 
-    def abasto(self, frm_principal, frm_lateral, frm_sup, frm_inf): #Conexión al boton 'abasto' pag principal
-        self.withdraw()
-        self.second.deiconify()
-        self.second.geometry('1000x600')
+        self.puesto = puesto
 
-        self.btn_inventario = Button(frm_lateral, text='Inventario', command=lambda: self.segunda_tabla(self.trvw_abasto,frm_inf)) #Empaquetara la tabla actual
+        self.ventana_sec = Toplevel()
+        self.ventana_sec.withdraw()
+
+    def inicialize(self): #Conexión al boton 'abasto' pag principal
+        self.ventana.withdraw()
+        self.ventana.deiconify()
+        self.ventana.geometry('1000x600')
+        self.btn_inventario = Button(self.frm_lateral, text='Inventario', command=lambda: self.segunda_tabla(self.trvw_abasto,self.frm_inf)) #Empaquetara la tabla actual
         self.btn_inventario.pack(pady=20, padx=5)                                                                          # y ejecutara la de datos inventario
-        self.btn_entrega = Button(frm_lateral, text='Entrega de\n pedido', command=lambda: self.toma_datos())
+        self.btn_entrega = Button(self.frm_lateral, text='Entrega de\n pedido', command=lambda: self.toma_datos())
         self.btn_entrega.pack(pady=20, padx=5) 
-        self.btn_regreso = Button(frm_lateral, text='Regresar', command=lambda: self.regreso(frm_principal))
+        self.btn_agregar_art = Button(self.frm_lateral, text='Agregar \n articulo', command=lambda:self.new_art(self.ventana_sec, self.btn_1, self.btn_2,self.btn_3), state='disabled')
+        self.btn_agregar_art.pack(side='bottom', pady=10, padx=5)
+        self.btn_regreso = Button(self.frm_lateral, text='Regresar', command=lambda: POS.regreso(self,self.frm_principal, self.ventana, self.btn_1, self.btn_2,self.btn_3))
         self.btn_regreso.pack(side='bottom',pady=20, padx=3)
-
     # Contenido
         #sup
-        self.frm_1 = Frame(frm_sup)
+        self.frm_1 = Frame(self.frm_sup)
         self.frm_1.pack(fill='x', expand=1)
-        self.frm_2 = Frame(frm_sup)
+        self.frm_2 = Frame(self.frm_sup)
         self.frm_2.pack(fill='x', expand=1)
-        self.frm_3 = Frame(frm_sup)
+        self.frm_3 = Frame(self.frm_sup)
         self.frm_3.pack(fill='x', expand=1)
-
         self.nombre_art = StringVar()
-        self.lbl_nombre ,self.entry_nombre_art = self.createWidgets(
+        self.lbl_nombre ,self.entry_nombre_art = POS.createWidgets(self,
             self.frm_1, 'Nombre del articulo:', self.nombre_art, 'normal')
     
         self.codigo_art = StringVar()
-        self.lbl_codigo ,self.entry_codigo_art = self.createWidgets(
+        self.lbl_codigo ,self.entry_codigo_art = POS.createWidgets(self,
             self.frm_2, 'Codigo del articulo:', self.codigo_art,'normal')
-
         self.btn_buscar = Button(self.frm_3, text='Buscar', width=10)
         self.btn_buscar.pack()
-
         #inf
-        self.trvw_abasto = Treeview(frm_inf, height=22)
+        self.scrbl = Scrollbar(self.frm_inf)
+        
+        self.trvw_abasto = Treeview(self.frm_inf, height=22, yscrollcommand=self.scrbl.set,selectmode='browse')
         self.trvw_abasto.pack( fill='both', expand=1)
-    
+        self.scrbl.pack(side='right', fill='y')
+        self.scrbl.config(command=self.trvw_abasto.yview)
+
         # Creación de la tabla de productos a través de un treeview.
         self.cursor.execute("Select `Código de barras`, Nombre, Descripción, `Tamaño/Peso`, Departamento, `Precio de costo`, `Precio de venta` from productos")
         self.trvw_abasto['show'] = 'headings'
 
         self.trvw_abasto["columns"] = ("Código de barras", "Nombre", "Descripción", "Tamaño/Peso", "Departamento", "Precio de costo", "Precio de venta")
-
         self.trvw_abasto.column("Código de barras", width=18, minwidth= 18, anchor = 'center')
         self.trvw_abasto.column("Nombre", width=135, minwidth= 135, anchor='center')
         self.trvw_abasto.column("Descripción", width=18, minwidth= 18, anchor = 'center')
@@ -839,7 +465,6 @@ class POS(Tk):
         self.trvw_abasto.column("Departamento", width=18, minwidth= 18, anchor = 'center')
         self.trvw_abasto.column("Precio de costo", width=135, minwidth= 135, anchor='center')
         self.trvw_abasto.column("Precio de venta", width=135, minwidth= 135, anchor='center')
-
         self.trvw_abasto.heading("Código de barras", text = "Código de barras")
         self.trvw_abasto.heading("Nombre", text = "Nombre", anchor='center')
         self.trvw_abasto.heading("Descripción", text = "Descripción", anchor='center')
@@ -851,44 +476,44 @@ class POS(Tk):
         for ro in self.cursor:
             self.trvw_abasto.insert('', i, text="", values = (ro[0], ro[1],ro[2],ro[3],ro[4],ro[5],ro[6]) )
             i += 1
+        if self.puesto == 'administrador' or self.puesto == 'supervisor':
+            self.btn_agregar_art ['state'] = ['normal']
 
     def segunda_tabla(self,tree, frm):
         tree.pack_forget()
-        self.trvw_abasto = Treeview(frm, height=22)
+        self.scrbl = Scrollbar(frm)
+        self.trvw_abasto = Treeview(frm, height=22, yscrollcommand=self.scrbl.set,selectmode='browse')
         self.trvw_abasto.pack( fill='both', expand=1)
-
         self.cursor.execute("select i.id, p.`código de barras`, p.nombre, i.cantidad from inventario i left join productos p on i.producto_id = p.id")
         self.trvw_abasto['show'] = 'headings'
-
         self.trvw_abasto["columns"] = ("ID","Código de barras", "Nombre", "Cantidad")
         self.trvw_abasto.column("ID", width=135, minwidth= 135, anchor='center')
         self.trvw_abasto.column("Código de barras", width=18, minwidth= 18, anchor = 'center')
         self.trvw_abasto.column("Nombre", width=135, minwidth= 135, anchor='center')
         self.trvw_abasto.column("Cantidad", width=18, minwidth= 18, anchor = 'center')
-
         self.trvw_abasto.heading("ID", text = "ID", anchor='center')
         self.trvw_abasto.heading("Código de barras", text = "Código de barras")
         self.trvw_abasto.heading("Nombre", text = "Nombre", anchor='center')
         self.trvw_abasto.heading("Cantidad", text = "Cantidad", anchor='center')
+        self.scrbl.pack(side='right', fill='y')
+        self.scrbl.config(command=self.trvw_abasto.yview)
         i = 0
         for ro in self.cursor:
             self.trvw_abasto.insert('', i, text="", values = (ro[0], ro[1],ro[2],ro[3]) )
             i += 1
 
-        
     def toma_datos(self): #Segunda ventana para recibir compra a proveedores
         #nombre, fecha, comentario,responsable,precio, cantidad, precio unitario
-        self.third.deiconify()
-        self.third.geometry('600x500')
-        self.third.title('Recibo de pedido')
+        self.ventana_sec.deiconify()
+        self.ventana_sec.geometry('600x200')
+        self.ventana_sec.title('Recibo de pedido')
         
-        self.frm_registro = Frame(self.third)
+        self.frm_registro = Frame(self.ventana_sec)
         self.frm_registro.pack(fill='both', expand=1)  
         self.frm_datos = Frame(self.frm_registro)
         self.frm_datos.pack(fill='both', expand=1)
         self.frm_entrega = Frame(self.frm_registro)
         self.frm_entrega.pack(fill='both', expand=1)
-
         self.frm_1 = Frame(self.frm_datos)
         self.frm_1.pack(fill='x', expand=1,padx=10)
         self.frm_2 = Frame(self.frm_datos)
@@ -897,33 +522,32 @@ class POS(Tk):
         self.frm_3.pack(fill='x', expand=1,padx=10)
         self.frm_4 = Frame(self.frm_datos)
         self.frm_4.pack(fill='x', expand=1,padx=10)
-
         self.proveedor = StringVar()
-        self.lbl_proveedor, self.entry_proveedor = self.createWidgets(
+        self.lbl_proveedor, self.entry_proveedor = POS.createWidgets(self,
             self.frm_1, 'Proveedor:', self.proveedor,'normal')
         
         self.fecha = StringVar()
-        self.lbl_fecha, self.entry_fecha = self.createWidgets(
+        self.lbl_fecha, self.entry_fecha = POS.createWidgets(self,
             self.frm_1, 'Fecha:', self.fecha,'normal')
         
         self.responsable = StringVar()
-        self.lbl_responsable, self.entry_responsable = self.createWidgets(
+        self.lbl_responsable, self.entry_responsable = POS.createWidgets(self,
             self.frm_1, 'Responsable:', self.responsable,'normal')
         
         self.comentario = StringVar()
-        self.lbl_comentario, self.entry_comentario = self.createWidgets(
+        self.lbl_comentario, self.entry_comentario = POS.createWidgets(self,
             self.frm_2, 'Comentario:', self.comentario,'normal')
         
         self.precio = StringVar()
-        self.lbl_precio, self.entry_precio = self.createWidgets(
+        self.lbl_precio, self.entry_precio = POS.createWidgets(self,
             self.frm_3, 'Precio:', self.precio,'normal')
         
         self.cantidad = StringVar()
-        self.lbl_cantidad, self.entry_cantidad = self.createWidgets(
+        self.lbl_cantidad, self.entry_cantidad = POS.createWidgets(self,
             self.frm_3, 'Cantidad:', self.cantidad,'normal')
         
         self.precio_unitario = StringVar()
-        self.lbl_precio_unitario, self.entry_precio_unitario = self.createWidgets(
+        self.lbl_precio_unitario, self.entry_precio_unitario = POS.createWidgets(self,
             self.frm_3, 'Precio Unitario:', self.precio_unitario,'normal')
         
         self.btn_cancelar = Button(self.frm_4, text='Cancelar', command=lambda:self.regreso_tercera(self.frm_registro))
@@ -931,145 +555,850 @@ class POS(Tk):
         self.btn_ingresar = Button(self.frm_4, text='Ingresar')
         self.btn_ingresar.pack(side='left',padx=10, pady=5)
 
-        self.tree = Treeview(self.frm_entrega)
-        
     def regreso_tercera(self,frm):
         frm.destroy()
-        self.third.withdraw()
-        
+        self.ventana_sec.withdraw()
+
+    def new_art(self,ventana, btn_1, btn_2,btn_3):
+        ventana.deiconify()
+        ventana.geometry('500x400')
+        self.frm_ini = Frame(ventana)
+        self.frm_ini.pack(fill='both', expand=1)
+        self.frm_lat = Frame(self.frm_ini, border=3, relief='groove', background='#F9F2E9')
+        self.frm_lat.pack(fill='y',side='left', ipady=10)
+        self.frm_info = Frame(self.frm_ini)
+        self.frm_info.pack(fill='both', expand=1)
+        self.frm_contenido_sup = Frame(self.frm_info, border=3, relief='groove')
+        self.frm_contenido_sup.pack(fill='x', expand=1)
+        self.frm_contenido_inf = Frame(self.frm_info, border=3, relief='groove')
+        self.frm_contenido_inf.pack(fill='both', expand=1)
+
+        self.btn_regresar = Button(self.frm_lat, text='Regresar', command=lambda: POS.regreso(self,self.frm_ini,ventana, btn_1, btn_2,btn_3))
+        self.btn_regresar.pack(padx=10, pady=5, side='bottom')
+        self.btn_guardar = Button(self.frm_contenido_inf, text='Aceptar', state='disabled', command=lambda: self.verify_art(ventana,self.btn_guardar,self.entry_nombre, self.entry_codigo,self.entry_descripcion
+                    ,self.entry_variante,self.entry_departamento, self.entry_tamaño,self.entry_precio_c, self.entry_precio_v))
+        self.btn_guardar.pack(padx=10,pady=5, side='left')
+
+        #Label's
+        self.lbl = Label(self.frm_contenido_sup, text='Los datos con un * son obligatorios')
+        self.lbl.pack(padx=10, pady=10)
+        self.frm_nombre = Frame(self.frm_contenido_sup)
+        self.frm_nombre.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_codigo = Frame(self.frm_contenido_sup)
+        self.frm_codigo.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_descripcion = Frame(self.frm_contenido_sup)
+        self.frm_descripcion.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_tamaño = Frame(self.frm_contenido_sup)
+        self.frm_tamaño.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_departamento = Frame(self.frm_contenido_sup)
+        self.frm_departamento.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_variante = Frame(self.frm_contenido_sup)
+        self.frm_variante.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_precio_c = Frame(self.frm_contenido_sup)
+        self.frm_precio_c.pack(fill='both', expand=1, padx=10, pady=7)
+        self.frm_precio_v = Frame(self.frm_contenido_sup)
+        self.frm_precio_v.pack(fill='both', expand=1, padx=10, pady=7)
+
+        self.nombre = StringVar()
+        self.lbl_nombre, self.entry_nombre = POS.createWidgets(self,
+            self.frm_nombre, '* Nombre:', self.nombre, 'normal')
+        self.entry_nombre.focus()
+        self.entry_nombre.bind('<Return>', lambda e: self.entry_codigo.focus())
+        self.codigo = StringVar()
+        self.lbl_codigo, self.entry_codigo = POS.createWidgets(self,
+            self.frm_codigo, '* Codigo:', self.codigo, 'normal')
+        self.entry_codigo.bind('<Return>', lambda e: self.entry_descripcion.focus())
+        self.descripcion = StringVar()
+        self.lbl_descripcion, self.entry_descripcion = POS.createWidgets(self,
+            self.frm_descripcion, 'Descripcion:', self.descripcion, 'normal')
+        self.entry_descripcion.bind('<Return>', lambda e: self.entry_tamaño.focus())
+        self.tamaño = StringVar()
+        self.lbl_tamaño, self.entry_tamaño = POS.createWidgets(self,
+            self.frm_tamaño, '* Tamaño/Peso:', self.tamaño, 'normal')
+        self.entry_tamaño.bind('<Return>', lambda e: self.entry_departamento.focus())
+        self.departamento = StringVar()
+        self.lbl_departamento, self.entry_departamento = POS.createWidgets(self,
+            self.frm_departamento, '* Departamento:', self.departamento, 'normal')
+        self.entry_departamento.bind('<Return>', lambda e: self.entry_variante.focus())
+        self.variante = StringVar()
+        self.lbl_variante, self.entry_variante = POS.createWidgets(self,
+            self.frm_variante, 'Variante:', self.variante, 'normal')
+        self.entry_variante.bind('<Return>', lambda e: self.entry_precio_c.focus())
+        self.precio_c = StringVar()
+        self.lbl_precio_c, self.entry_precio_c = POS.createWidgets(self,
+            self.frm_precio_c, '* Precio de compra:', self.precio_c, 'normal')
+        self.entry_precio_c.bind('<Return>', lambda e: self.entry_precio_v.focus())
+        self.precio_v = StringVar()
+        self.lbl_precio_v, self.entry_precio_v = POS.createWidgets(self,
+            self.frm_precio_v, '* Precio de venta:', self.precio_v, 'normal')
+        self.entry_precio_v.bind('<Return>', lambda e: self.verify_entrys_art(self.btn_guardar,self.entry_nombre.get(), self.entry_codigo.get(), 
+                                    self.entry_departamento.get(), self.entry_tamaño.get(),self.entry_precio_c.get(), self.entry_precio_v.get()))
     
-    def modificar_clientes(self):
+    def verify_entrys_art(self,btn,nombre, codigo, departamento,tamaño,precio_costo,precio_venta):
+        if len(nombre) != 0 and len(codigo) != 0 and len(departamento) != 0 and len(tamaño) != 0 and len(precio_costo) != 0 and len(precio_venta) != 0:
+            print('hola')
+            btn ['state'] = ['normal']
+            
+    def verify_art(self,ventana,btn,nombre, codigo,descripcion,variante, departamento,tamaño,precio_costo,precio_venta):
+        validacion = messagebox.askyesno(title='Confirmar datos',
+             message=f'¿Desea guardar su articulo? \n Nombre: {nombre.get()} \n Cod. de Articulo: {codigo.get()} \n Descripción: {descripcion.get()} \n Variante: {variante.get()}\n Departamento: {departamento.get()} \n Tamaño/Peso: {tamaño.get()} \n Precio de costo: {precio_costo.get()} \n Precio de venta: {precio_venta.get()}',
+             parent=ventana)
+        if validacion == False: 
+            self.entry_nombre.focus()
+        else:
+            btn ['state'] = ['disabled']
+            nombre.delete(0,'end')
+            codigo.delete(0,'end')
+            descripcion.delete(0,'end')
+            variante.delete(0,'end')
+            departamento.delete(0,'end')
+            tamaño.delete(0,'end')
+            precio_costo.delete(0,'end')
+            precio_venta.delete(0,'end')
+            nombre.focus()
+    
+        
+class POS(Tk):
+    def __init__(self):
+        super().__init__()
+        #Base de datos
+        self.db = getdata()
+        self.cursor = self.db.cursor()
+        self.psswrd = []
+        self.users = []
+        self.pst = []
+        self.puesto = ''
+        #Ventana
+        self.geometry('300x100')
+        self.title('General Point of Sale System')
+
+        self.second = Toplevel(self)
+        self.second.geometry('400x600')
+        self.second.withdraw()
+        self.second.protocol("WM_DELETE_WINDOW", lambda:None)
+
+        self.third = Toplevel(self)
+        self.third.withdraw()
+
+        self.cash = 0
+        self.type = ''
+        self.count = 0
+        self.ticket = 0
+        self.cant_articulos = 0
+        self.articulos = {}
+        self.compra = {}
+
+        self.frm_pos = Frame(self, relief= 'sunken')
+        self.frm_pos.pack(fill= 'both' ,expand=1)
+        self.inicialize()
+        self.style_pos()
+
+    def inicialize(self):
+        self.geometry('300x100')
+        self.cursor.execute("Select * from usuarios")
+        tablita_userpass = self.cursor.fetchall()
+        for userpass in tablita_userpass:
+            self.users.append(userpass[1])
+            self.pst.append(userpass[2])
+            self.psswrd.append(userpass[3])
+        self.geometry('300x100')
+        self.frm_smo = Frame(self.frm_pos)
+        self.frm_smo.pack()
+        self.frm_cont_2 = Frame(self.frm_smo)
+        self.frm_cont_2.pack(pady=10)
+        self.frm_cont_3 = Frame(self.frm_smo)
+        self.frm_cont_3.pack(pady=10)
+        self.lbl_cont_sec = Label(self.frm_cont_2, text='Usuario : ',justify='center', font=('Arialblack', 12))
+        self.lbl_cont_sec.pack(side='left',padx=5)
+        self.entry_cont_sec = Entry(self.frm_cont_2,justify='center', font=('',13), width=15)
+        self.entry_cont_sec.pack(side='left',padx=5)
+        self.entry_cont_sec.focus()
+        self.entry_cont_sec.bind('<Return>',lambda e:self.entry_cont_sec_2.focus())
+        self.lbl_cont_sec_2 = Label(self.frm_cont_3, text='Contraseña : ',justify='center', font=('Arialblack', 12))
+        self.lbl_cont_sec_2 .pack(side='left',padx=5)
+        self.entry_cont_sec_2  = Entry(self.frm_cont_3,justify='center', font=('',13), width=15, show = '$')
+        self.entry_cont_sec_2 .pack(side='left',padx=5)
+        self.lbl_error = Label(self.frm_pos, text='',font=('Arialblack', 15), foreground='red')
+        self.entry_cont_sec_2.bind('<Return>',lambda e:self.fun_usuario())        
+
+    # Función para verificar el usuario y la contraseña ingresados dentro de los entrys de la ventana.
+    def fun_usuario(self):
+        self.lbl_error.pack()
+        self.lbl_error.config(text='')
+        user = self.entry_cont_sec.get()
+        paswrd = self.entry_cont_sec_2.get()
+        if user in self.users:
+            ind = self.users.index(user)
+            if check_password_hash(self.psswrd[ind], paswrd) == True:
+                    self.puesto = self.pst[ind]
+                    self.usuario = self.users[ind]
+                    self.users.clear()
+                    self.psswrd.clear()
+                    self.pst.clear()
+                    self.frm_smo.destroy()
+                    self.lbl_error.destroy()
+                    self.main_tab()            
+            else:
+                    self.lbl_error.config(text='Contraseña incorrecta')
+            
+        else: 
+            self.lbl_error.config(text='El usuario no está registrado en el sistema')
+
+
+    def main_tab(self): #Pantalla de venta
+        self.geometry('1200x700')
+        self.frm_prog = Frame(self.frm_pos)
+        self.frm_prog.pack(fill= 'both' ,expand=1)
+
+        self.frm_1 = Frame(self.frm_prog)
+        self.frm_1.pack(fill= 'both' ,expand=1)   
+        
+        self.frm_usuario = Frame(self.frm_1, background='#4C1F04') # Nombre de empresa y Usuario
+        self.frm_usuario.pack(fill='x')
+        self.frm_lateral = Frame(self.frm_1, relief='groove', border=5, background='#F9F2E9')
+        self.frm_lateral.pack(fill='y',side='left', ipady=10)
+        self.frm_sale = Frame(self.frm_1) 
+        self.frm_sale.pack(fill='both', expand=1) 
+        
+        self.lbl_negocio = Label(self.frm_usuario, text='Point Of Sale', font=('Arial Black', 16), fg='#ffffff', background='#4C1F04')
+        self.lbl_negocio.pack(side='left')
+        self.lbl_usuario = Label(self.frm_usuario, text=self.usuario+'('+self.puesto+')', font=('', 14), fg='#ffffff', bg='#4C1F04')
+        self.lbl_usuario.pack(side='right')
+       
+       #Barra lateral
+        self.btn_new_client = Button(self.frm_lateral, text='Cliente \n nuevo', command=lambda:self.second_window(1,self.btn_new_client,
+        self.btn_abasto,self.btn_config, self.puesto), state='disabled')  #Funcion clientes, subclase
+        self.btn_new_client.pack(pady=20)
+        self.btn_abasto = Button(self.frm_lateral, text='Abasto', command=lambda:self.second_window(2,self.btn_new_client,
+        self.btn_abasto,self.btn_config, self.puesto)) #Funcion abasto, subclase
+        self.btn_abasto.pack(pady=10)
+        
+        self.btn_config = Button(self.frm_lateral, text='Configuración', command=lambda:self.second_window(3,self.btn_new_client,
+        self.btn_abasto,self.btn_config,self.puesto))
+        self.btn_config.pack(side='bottom', pady=10, padx=5)
+
+       #Parte de toma de datos
+        self.frm_products_sale = Frame(self.frm_sale) #Frame de muestra de articulos
+        self.frm_products_sale.pack(fill='both', expand=1)
+        self.frm_cap_cliente = Frame(self.frm_products_sale) #Captura cliente
+        self.frm_cap_cliente.pack(fill='x', expand=1, pady=5)
+        self.frm_captura = Frame(self.frm_products_sale) #Captura de codigo
+        self.frm_captura.pack( fill='both', expand=1)
+        self.frm_articulos = Frame(self.frm_products_sale) # Treeview y buttons
+        self.frm_articulos.pack(fill='both', expand=1)
+
+        self.frm_tree_buttons = Frame(self.frm_articulos)
+        self.frm_tree_buttons.pack(fill='both', expand=1)
+
+        self.frm_total = Frame(self.frm_articulos, background='#FEF8F5')
+        self.frm_total.pack(fill='x', expand=1)
+        self.frm_total_btn = Frame(self.frm_total, background='#FEF8F5')
+        self.frm_total_btn.pack(fill='x', expand=1, side='left')
+        self.frm_total_check = Frame(self.frm_total, background='#FEF8F5')
+        self.frm_total_check.pack(side='left')
+
+        self.frm_tree = Frame(self.frm_tree_buttons)
+        self.frm_tree.pack(side='left', fill='both', expand=1)
+
+        self.frm_button_venta = Frame(self.frm_tree_buttons, relief='groove', border=5, background='#F9F2E9')
+        self.frm_button_venta.pack(side='left',fill='y', ipadx=10)
+        self.frm_button_venta.configure(width=100)
+    
+
+        self.lbl_cliente = Label(self.frm_cap_cliente, text='Cliente :', font=('', 14))
+        self.lbl_cliente.pack(side='left')
+        self.entry_cliente = Entry(self.frm_cap_cliente, font=('', 14))
+        self.entry_cliente.pack(side='left',fill='x', expand=1, padx=10)
+        self.btn_buscar_cliente = Button(self.frm_cap_cliente, text='  Buscar  ' ,command=lambda:self.busqueda_cliente(self.entry_cliente.get())) #Boton busqueda de usuario
+        self.btn_buscar_cliente.pack(padx=10)
+
+        self.cantidad = Spinbox(self.frm_captura, from_=2, to=10000, increment=1, font=('', 10), width=5) # To= Cantidad existente en inventario
+        self.cantidad.pack(side='left', padx=5)
+        self.cantidad.bind('<Return>', lambda e: self.btn_buscar.focus())
+        self.lbl_codigo = Label(self.frm_captura, text='Captura de codigo de articulo:', font=('', 14))
+        self.lbl_codigo.pack(side='left', ipady=3)
+        self.entry_codigo = Entry(self.frm_captura, font=('',14),width=30)
+        self.entry_codigo.pack(side='left',fill='x', padx=10, pady=10)
+        self.entry_codigo.bind('<Return>', lambda e: self.cantidad.focus())
+        self.btn_buscar = Button(self.frm_captura, text='  Agregar  ' ,
+                command=lambda:self.search_article(self.trvw_1,self.entry_codigo.get(), self.cantidad.get())) #Boton busqueda de Articulos
+        self.btn_buscar.pack(side='left',padx=10)
+        self.btn_buscar.bind('<Return>', lambda e:self.search_article(self.trvw_1,self.entry_codigo.get(), self.cantidad.get()))
+        #Presentacion de articulos
+
+        self.scrbl = Scrollbar(self.frm_tree)
+        self.scrbl.pack(side='right', fill='y')
+
+        self.trvw_1 = Treeview(self.frm_tree, columns=('col1','col2', 'col3'),height=15, yscrollcommand=self.scrbl.set,selectmode='browse')
+        self.trvw_1.pack(side='left', fill='both', expand=1)
+
+        self.trvw_1.column("#0", width=150)
+        self.trvw_1.column("col1", width=150, anchor='center')
+        self.trvw_1.column("col2", width=30, anchor='center')
+        self.trvw_1.column("col3", width=30, anchor='center')
+
+        self.trvw_1.heading("#0", text='Producto', anchor='center')
+        self.trvw_1.heading("col1", text='Cantidad', anchor='center')
+        self.trvw_1.heading("col2", text='P.Unitario', anchor='center')
+        self.trvw_1.heading("col3", text='Total', anchor='center')
+
+        self.trvw_1.tag_configure('impar', background='#F6EEC4')
+        
+        self.scrbl.config(command=self.trvw_1.yview)
+
+        self.trvw_1.bind("<ButtonRelease-1>", lambda e:self.active(self.btn_remove, 'venta'))
+        
+        self.btn_remove = Button(self.frm_button_venta, text='Remover', command=lambda:self.delete_one(self.trvw_1,self.btn_remove, 'venta'), state='disabled')
+        self.btn_remove.pack(pady=20)
+        self.btn_cancel = Button(self.frm_button_venta, text='Cancelar', command=lambda:self.delete_all(self.trvw_1,self.btn_remove, self.puesto, self.btn_cancel), state='disabled')
+        self.btn_cancel.pack(pady=20)
+        self.btn_punto = Button(self.frm_button_venta, text='Descuento',state='disabled', command=lambda: self.descuentos(self.third, self.entry_cliente))
+        self.btn_punto.pack(pady=20)
+
+        self.btn_permiso = Button(self.frm_button_venta, text='Permiso \n administrador', command=lambda: self.permiso_cancel(self.btn_cancel))
+        self.btn_permiso.pack(pady=20)
+
+        #Total
+        self.btn_efectivo = Button(self.frm_total_btn, text='Efectivo', command=lambda:self.type_select('efectivo',self.btn_pagar))
+        self.btn_efectivo.pack(side='left', padx=10, pady=10, ipady=10)
+        self.btn_transferencia = Button(self.frm_total_btn, text='Transferencia', command=lambda:self.type_select('transferencia',self.btn_pagar))
+        self.btn_transferencia.pack(side='left', padx=10, pady=10, ipady=10)
+        self.btn_Tarjeta = Button(self.frm_total_btn, text='Tarjeta', command=lambda:self.type_select('tarjeta',self.btn_pagar))
+        self.btn_Tarjeta.pack(side='left', padx=10, pady=10, ipady=10)
+        self.btn_Mixto = Button(self.frm_total_btn, text='Mixto', command=lambda:self.type_select('mixto',self.btn_pagar))
+        self.btn_Mixto.pack(side='left', padx=10, pady=10, ipady=10)
+
+        self.lbl_total = Label(self.frm_total_check, text=f'Total: ${self.cash}', font=('', 18), background='#FEF8F5')
+        self.lbl_total.pack(side='left', padx=100)
+
+        self.btn_pagar = Button(self.frm_total_check, text='  Pagar  ', command=lambda: self.pagar(self.cash, self.type, self.btn_pagar), state='disabled')
+        self.btn_pagar.pack(side='left',padx=10, pady=4, ipady=10)
+
+        if self.puesto == 'supervisor' or self.puesto == 'administrador':
+            self.btn_cancel ['state'] = ['normal']
+            self.btn_new_client ['state'] = ['normal']
+            self.btn_permiso ['state'] = ['disabled']
+            self.btn_punto ['state'] = ['normal']
+        
+
+    def active(self,btn, opc):
+        btn ['state'] = ['normal']
+        if opc == 'venta':
+            self.trvw_1.bind('<BackSpace>', lambda e: self.delete_one(self.trvw_1,self.btn_remove, 'venta'))
+
+    def permiso_cancel(self, btn):
+        #Funcion que pida una contraseña para poder eliminar
+        self.second.geometry('100x100')
+        self.frm_con = Frame(self.second)
+        self.frm_con.pack(fill='both', expand=1)
+
+        self.contraseña = StringVar()
+        self.lbl_contraseña,self.entry_contraseña = self.createWidgets(
+            self.frm_con, 'Contraseña:', self.contraseña, 'normal')
+        # buscar en la base de datos para poder dar permiso
+        self.entry_contraseña.bind('<Return>', lambda e: self.solicitar(btn))
+
+    def solicitar(self, btn):
+        #Buscar la contraseña en la base de datos 
+        # If 'contraseña? si existe, entonces:
+        # btn ['state'] = ['normal']
+        # btn.configure(command=lambda:self.delete_all(self.trvw_1,self.btn_remove, puesto, self.btn_cancel))
         pass
 
-    def configure(self, frm_principal, frm_lateral, frm_sup, frm_inf, puesto):
-        #barra lateral
-        self.btn_usuarios = Button(frm_lateral, text='Usuarios', state='disabled')
-        self.btn_usuarios.pack(padx=5, pady=10)
-        self.btn_corte = Button(frm_lateral, text='Corte de caja')
-        self.btn_corte.pack(padx=5, pady=10)
-        self.btn_informe = Button(frm_lateral, text='Informe', state='disabled')
-        self.btn_informe.pack(padx=5, pady=10)
         
-        self.btn_regreso = Button(frm_lateral, text='Regresar', command=lambda: self.regreso(frm_principal))
-        self.btn_regreso.pack(side='bottom',padx=5, pady=10)
-        self.btn_cerrar_sesion = Button(frm_lateral, text='Cerrar sesión', command=lambda: self.inicio_sesion(frm_principal))
-        self.btn_cerrar_sesion.pack(side='bottom',padx=5, pady=10)
-        #frm sup
-        # Creación de la tabla de usuarios a través de un treeview.
-        self.tree = Treeview(frm_sup)
+    def search_article(self, tree, article, amount): #Buscar y agregar articulo
+        if amount == '':
+            amount = 1
+        amount = int(amount)
+        amount_4_artticle = amount*16
+        if self.count % 2 == 1:  #Darle color de fondo intercaldo
+            tree.insert('', 'end', text=article , values=(amount, '16', amount_4_artticle,), tags=('impar',))
+        else:
+            tree.insert('', 'end', text=article , values=(amount, '16', amount_4_artticle,))
+        self.count += 1
+        self.cash += amount_4_artticle
+        self.lbl_total.configure(text=f'$ {self.cash}')                       # Se agrega los 3 valores a un diccionario,
+        self.entry_codigo.focus()                                             # con su valor de articulo
+        self.cantidad.set('')                                                 #
+        self.cant_articulos += 1                                              #
+        self.art = f'articulo {self.cant_articulos}'                          #
+        self.cant = f'cantidad {self.cant_articulos}'
+        self.total_art = f'total de articulo {self.cant_articulos}'
+        self.compra [self.art] = article
+        self.compra [self.cant] = amount
+        self.compra [self.total_art] = amount_4_artticle        
+        
+
+    def type_sale(self, type): # Configurar combobox
+        values = []
+        if type == 'mixto':
+            values = ['Efectivo', 'Transferencia', 'Tarjeta']
+            self.entry_cash.bind('<Return>', lambda e: self.cmbbx.focus())
+        return values
+
+    def type_select(self, type, btn_pay): #Actualizar El tipo y activar boton
+        self.type = type
+        btn_pay ['state'] = ['normal']
+
+    def descuentos(self, ventana, entry): # Descuento con puntos
+        ventana.deiconify()
+        ventana.geometry('200x130')
+
+        self.frm = Frame(ventana)
+        self.frm.pack(fill='both', expand=1)
+        self.btn_1 = Button(self.frm, text='Puntos de cliente',command=self.aply_points(), state='disabled')
+        self.btn_1.pack(padx=10, pady=10)
+        if len(entry.get()) != 0 and self.puesto == 'supervisor' or self.puesto == 'administrador':
+            self.btn_1 ['state'] = ['normal']
+        self.btn_regreso = Button(self.frm, text='Regresar', command=lambda:self.regreso(self.frm,ventana,self.btn_new_client,
+        self.btn_abasto,self.btn_config))
+        self.btn_regreso.pack(padx=5, pady=10)
+
+    def aply_points(self):
+        pass
+
+    def pagar(self, total, type, btn):
+        btn ['state'] = ['disabled']
+        self.second.deiconify()
+        self.second.geometry('300x220')
+        #Frame's
+        self.frm = Frame(self.second)
+        self.frm.pack(fill='both', expand=1)
+        self.frm_1 = Frame(self.frm)
+        self.frm_1.pack(fill='both', expand=1)
+        self.frm_cash = Frame(self.frm_1)
+        self.frm_cash.pack(fill='both', expand=1)
+        self.frm_cash_datos = Frame(self.frm_1)
+        self.frm_cash_datos.pack(fill='both', expand=1)
+        self.Lbl = Frame(self.frm_cash_datos)
+        self.Lbl.pack(fill='both', expand=1, side='left')
+        self.Entrys = Frame(self.frm_cash_datos)
+        self.Entrys.pack(fill='both', expand=1, side='left')
+        self.frm_2 = Frame(self.frm) #Botones
+        self.frm_2.pack(side='bottom', fill='both', expand=1)    
+        # Lable's
+        self.lbl_cash = Label(self.frm_cash, text='$', font=('',18))
+        self.lbl_cash.pack(side='left', padx=5, pady=4)
+        self.lbl = Label(self.Lbl, text='Total:', font=('',12))
+        self.lbl.pack(padx=5, pady=4)
+        self.lbl_2 = Label(self.Lbl, text='Cambio:',font=('',12))
+        self.lbl_2.pack(padx=5, pady=4)
+        self.lbl_3 = Label(self.Lbl, text='Tipo:',font=('',12))
+        self.lbl_3.pack(padx=5, pady=4)
+        self.lbl_4 = Label(self.Lbl, text='Pago:',font=('',12))
+        self.lbl_4.pack(padx=5, pady=4)
+        #Entry's
+        self.entry_cash = Entry(self.frm_cash, textvariable=self.cash, font=('',13))
+        self.entry_cash.pack(fill='both', expand=1, padx=5, pady=5, side='left')
+        self.entry_cash.focus()
+        self.entry_cash.delete(0, 'end')
+        
+        self.entry = Entry(self.Entrys, font=('',12))
+        self.entry.pack(padx=5, pady=5)
+        self.entry.insert(0,f'${total}')
+        self.entry ['state']=['disabled']
+        self.entry_2 = Entry(self.Entrys,font=('',12))
+        self.entry_2.pack(padx=5, pady=5)
+        self.entry_2 ['state']=['disabled']
+        self.entry_3 = Entry(self.Entrys,font=('',12))
+        self.entry_3.pack(padx=5, pady=5)
+        self.entry_3.insert(0, self.type)
+        self.entry_3 ['state']=['disabled']
+        self.cmbbx = Combobox(self.Entrys,font=('',12), values=self.type_sale(type), state='readonly')
+        self.cmbbx.pack(padx=5, pady=5)
+        #Botones
+        self.btn_cancelar = Button(self.frm_2, text='Cancelar', command=lambda:self.regreso(self.frm, self.second,self.btn_new_client,
+        self.btn_abasto,self.btn_config))
+        self.btn_cancelar.pack(side='left',fill='both', expand=1,padx=5, pady=5)
+        self.btn_confirmar = Button(self.frm_2, text='Confirmar', command=lambda:self.successful_payment(self.cmbbx.get(), self.entry_cash.get(), total, self.type, self.frm))
+        self.btn_confirmar.pack(side='left',fill='both', expand=1,padx=5, pady=5)
+        self.entry_cash.bind('<Return>', lambda e:self.exact_payment(self.entry_cash,total, self.btn_confirmar, type))
+
+    def exact_payment(self,entry, pago, btn, type): #Con enter igualas la cantidad o se selecciona el boton confirmar
+        if len(entry.get()) == 0:
+            entry.insert(0,pago)
+        if type != 'mixto':
+            btn.focus()
+        else:
+            self.cmbbx.bind('<Return>', lambda e: self.btn_confirmar.focus() )
+            self.cmbbx.focus_set()
+        btn.bind('<Return>', lambda e :self.successful_payment(self.cmbbx.get(), self.entry_cash.get(), pago, self.type, self.frm))
+
+    def successful_payment(self, cmbbx, entry, pago, type, frm): # Verificar pago
+        if len(entry) == 0:
+            messagebox.showerror(title='Faltan datos', message='Revise sus datos.', parent=self.second)
+            self.entry_cash.focus()
+        elif len(entry) != 0:
+            entry_int = int(entry)
+            if entry_int > pago:
+                messagebox.showerror(title='Excede pago', message='Pago excedente.', parent=self.second)
+                self.entry_cash.focus()
+            elif type == 'mixto':
+                pago = pago - entry_int
+                if entry_int == 0 or cmbbx == '':
+                    messagebox.showerror(title='Faltan datos', message='Revise sus datos.', parent=self.second)
+                    self.entry_cash.focus()
+                elif pago > 0:
+                    self.cash -= entry_int
+                    self.regreso(frm, self.second,self.btn_new_client,
+        self.btn_abasto,self.btn_config)
+                    self.pagar(pago, type, self.btn_pagar)
+                    self.entry_cash.bind('<Return>', lambda e:self.exact_payment(self.entry_cash,pago, self.btn_confirmar, type))
+                else:
+                    type = ''
+                    self.ticket +=1
+                    self.compra ['pago'] = self.cash
+                    self.articulos [self.ticket] = self.compra
+                    print(self.articulos)
+                    self.cash -= entry_int
+                    self.lbl_total.configure(text=f'$ {self.cash}')
+                    self.delete_all(self.trvw_1, '')
+                    self.entry_cash.delete(0, 'end')
+                    self.regreso(frm, self.second,self.btn_new_client,
+        self.btn_abasto,self.btn_config)
+                    messagebox.showinfo(title='Pago Exitoso', message='¡Su compra fue registrada con exito, vuelva pronto!')
+            elif pago > entry_int:
+                messagebox.showerror(title='Pago incompleto', message='Pago incompleto, revise sus datos.', parent=self.second)
+                self.entry_cash.focus()
+            elif entry_int == pago:
+                type = ''
+                self.ticket +=1
+                self.compra ['pago'] = self.cash
+                self.articulos [self.ticket] = self.compra
+                print(self.articulos)
+                self.cash -= entry_int
+                self.lbl_total.configure(text=f'$ {self.cash}')
+                self.regreso(frm, self.second,self.btn_new_client,
+        self.btn_abasto,self.btn_config)
+                self.delete_all(self.trvw_1, '')
+                messagebox.showinfo(title='Pago Exitoso', message='¡Su compra fue registrada con exito, vuelva pronto!')
+
+
+    def delete_one(self, tree, btn_remove, ventana): # Función para eliminar un elemento del treeview
+        x = tree.selection()[0]
+        selected = tree.focus()
+        values = tree.item(selected,'values')
+        #Guardar valores
+        if ventana == 'venta':
+            cash = int(values[2])
+            self.cash -= cash
+            self.lbl_total.configure(text=f'$ {self.cash}')
+        tree.delete(x)
+        btn_remove ['state'] = ['disabled']
+
+    def delete_all(self, tree, btn_remove, puesto, btn_cancel): # Función para eliminar todo del treeview
+        for record in tree.get_children():
+            tree.delete(record)
+        if btn_remove != '':
+            btn_remove ['state'] = ['disabled']
+        if puesto == 'vendedor':
+            btn_cancel ['state'] = ['normal']
+        
+
+    def regreso(self, frm, ventana, btn_1, btn_2,btn_3): # Función esconde la ventana secundaria y destruye el frame.
+        frm.destroy()
+        ventana.withdraw()
+        btn_1 ['state'] = ['normal']
+        btn_2 ['state'] = ['normal']
+        btn_3 ['state'] = ['normal']
+        
+
+    def second_window(self, necesidad, btn_1, btn_2,btn_3, puesto):
+        self.second.deiconify()
+        btn_1 ['state'] = ['disabled']
+        btn_2 ['state'] = ['disabled']
+        btn_3 ['state'] = ['disabled']
+
+        self.frm_principal = Frame(self.second)
+        self.frm_principal.pack(fill='both', expand=1)
+        self.frm_lateral = Frame(self.frm_principal, border=3, relief='groove', background='#F9F2E9')
+        self.frm_lateral.pack(fill='y',side='left', ipady=10)
+        self.frm_info = Frame(self.frm_principal)
+        self.frm_info.pack(fill='both', expand=1)
+        self.frm_contenido_sup = Frame(self.frm_info, border=3, relief='groove')
+        self.frm_contenido_sup.pack(fill='x', expand=1)
+        self.frm_contenido_inf = Frame(self.frm_info, border=3, relief='groove')
+        self.frm_contenido_inf.pack(fill='both', expand=1)
+        self.opcion(necesidad,self.frm_principal,self.frm_lateral, self.frm_contenido_sup, self.frm_contenido_inf, btn_1, btn_2,btn_3, puesto)
+
+    def opcion(self,necesidad,frm_principal, frm_lateral, frm_sup,frm_inf, btn_1, btn_2,btn_3, puesto):
+        if necesidad == 1:
+            clientes = Clientes(self.second,frm_principal, frm_lateral, frm_sup, frm_inf, btn_1, btn_2,btn_3, puesto)
+            clientes.inicialize()
+        elif necesidad == 2:
+            abasto = Abasto(self.second,frm_principal, frm_lateral, frm_sup, frm_inf, btn_1, btn_2,btn_3, puesto)
+            abasto.inicialize()                 
+        elif necesidad == 3:   
+            self.configuracion(self.second,frm_principal, frm_lateral, frm_sup, frm_inf, btn_1, btn_2,btn_3, puesto)
+
+    
+    def configuracion(self,ventana,frm_principal, frm_lateral,frm_sup,frm_inf,btn_1, btn_2,btn_3, puesto): #Opcion de configuracion
+        ventana.deiconify()
+        ventana.geometry('800x430')
+        #Botones
+        self.btn_corte = Button(frm_lateral, text=' Corte \n de caja', command=lambda: self.corte()) #Llamado de función 'Corte de caja'
+        self.btn_corte.pack(padx=5, pady=10)
+        self.btn_informe = Button(frm_lateral, text='Informe', command=lambda: self.informe_view(), state='disabled') #Llamado de función 'Informe'
+        self.btn_informe.pack(padx=5, pady=10)
+        self.btn_regresar = ttk.Button(frm_lateral, text='Regresar', command=lambda: self.regreso(frm_principal, ventana,btn_1, btn_2,btn_3))
+        self.btn_regresar.pack(padx=5, pady=10, side='bottom')
+        self.btn_sesion = ttk.Button(frm_lateral, text='Cerrar sesión', command=lambda: self.inicio_sesion(frm_principal)) #Llamado de función 'cerrar sesion'
+        self.btn_sesion.pack(padx=5, pady=10, side='bottom')
+
+        self.scrbl = Scrollbar(frm_sup)
+        self.scrbl.pack(side='right', fill='y')
+        
+        self.tree = Treeview(frm_sup, height=10, yscrollcommand=self.scrbl.set,selectmode='browse')
         self.tree.pack(fill='both', expand=1)
+        self.scrbl.config(command=self.tree.yview)
         self.cursor.execute("Select Username, Puesto from usuarios")
         self.tree['show'] = 'headings'
-        
 
         self.tree["columns"] = ("Username", "Puesto")
 
         self.tree.column("Username", width=18, minwidth= 18, anchor = 'center')
         self.tree.column("Puesto", width=135, minwidth= 135, anchor='center')
-
         self.tree.heading("Username", text = "Username")
         self.tree.heading("Puesto", text = "Puesto", anchor='center')
+        
         i = 0
         for ro in self.cursor:
             self.tree.insert('', i, text="", values = (ro[0], ro[1]) )
             i += 1
         #frm inf
-        self.btn_modificar = Button(frm_inf, text='Modificar', state='disabled')
+        self.frm_entry = Frame(frm_inf)
+        self.frm_entry.pack(fill='both', expand=1)
+        self.frm_btn = Frame(frm_inf)
+        self.frm_btn.pack(fill='x', expand=1)
+        self.lbl_nombre = Label(self.frm_entry, text='Nombre:')
+        self.lbl_nombre.pack(side='left', padx=10, pady=10)
+        self.entry_nombre = Entry(self.frm_entry, state='disabled')
+        self.entry_nombre.pack(side='left', padx=10, pady=10)
+        self.lbl_puesto = Label(self.frm_entry, text='Puesto:')
+        self.lbl_puesto.pack(side='left', padx=10, pady=10)
+        self.entry_puesto = Entry(self.frm_entry, state='disabled')
+        self.entry_puesto.pack(side='left', padx=10, pady=10)
+        self.btn_modificar = Button(frm_inf, text='Modificar', state='disabled', command=lambda: self.modificar(self.tree,self.entry_nombre, 
+                                self.entry_puesto, self.btn_modificar, self.btn_agregar,self.btn_confirmar,self.lbl_nombre,self.lbl_puesto, ventana))
         self.btn_modificar.pack(side='left', padx=10, pady=5)
+        self.btn_agregar = Button(frm_inf, text='Agregar', state='disabled', command=lambda:self.activate(self.entry_nombre, 
+                                                self.entry_puesto,self.btn_agregar,self.btn_modificar, self.btn_confirmar,self.lbl_nombre,self.lbl_puesto, ventana) )
+        self.btn_agregar.pack(side='left', padx=10, pady=5)
+        self.btn_confirmar = Button(frm_inf, text='Confirmar')
+        self.btn_confirmar.pack(side='left', padx=10, pady=5)
+        
         #Funciones dependiendo el rango del usuario
-        if puesto == 'supervisor' or puesto == 'administrador':
+        if self.puesto == 'supervisor' or self.puesto == 'administrador':
             self.btn_informe ['state'] = ['normal']
-            if puesto == 'administrador':
-                self.btn_usuarios ['state'] = ['normal']
+            if self.puesto == 'administrador':
+                self.tree.bind("<ButtonRelease-1>", lambda e:self.active(self.btn_modificar,'configuracion'))
+                self.btn_agregar ['state'] = ['normal']
+                
+                    
+    def activate(self,nombre, puesto, btn,btn_2,btn_3, ventana):
+        nombre ['state'] = ['normal']
+        puesto ['state'] = ['normal']
+        btn ['state'] = ['disabled']
+        btn_2 ['state'] = ['disabled']
+        nombre.focus()
+        nombre.bind('<Return>', lambda e: puesto.focus())
+        btn_3.configure(command=lambda:self.usuarios_new(nombre.get(), 
+                       puesto.get(),btn, btn_2,btn_3, ventana))
+        nombre.focus()
+        nombre.bind('<Return>', lambda e: puesto.focus())
+        puesto.bind('<Return>', lambda e: self.activate(nombre, puesto, btn, ventana))
+        if len(self.entry_nombre.get()) != 0 and len(self.entry_puesto.get()) != 0:
+            btn_3 ['state'] = ['normal']
 
-        
+
+    def usuarios_new(self, nombre, puesto,  btn, btn_2,btn_3,ventana):
+        validacion = messagebox.askyesno(title='Confirmar datos',
+             message=f'¿Desea guardar su usuario? \n Nombre: {nombre.get()} \n Puesto: {puesto.get()} ',
+             parent=ventana)
+        if validacion == True: 
+            pass
+        #     Se guarda en la base de datos
+        nombre.delete(0,'end')
+        puesto.delete(0,'end')
+        nombre ['state'] = ['disabled']
+        puesto ['state'] = ['disabled']
+        btn ['state'] = ['disabled']
+        btn_2 ['state'] = ['normal']
+        btn_3 ['state'] = ['disabled']
+
+    def modificar(self, tree, nombre, puesto, btn,btn_2, btn_3,text_nombre, text_puesto, ventana):
+        #guardar numero
+        nombre ['state'] = ['normal']
+        puesto ['state'] = ['normal']
+        btn ['state'] = ['disabled']
+        btn_2 ['state'] = ['disabled']
+        nombre.focus()
+        nombre.bind('<Return>', lambda e: puesto.focus())
+        selected = tree.focus()
+        values = tree.item(selected,'values')
+        validacion = messagebox.askyesno(title='Confirmar datos',
+             message='¿Desea modificar la contraseña?',
+             parent=ventana)
+        if validacion == False:
+            print('holaaa')
+            nombre.insert(0,values[0])
+            puesto.insert(0,values[1])
+            btn_3.configure(command=lambda: self.usuarios_new(nombre, puesto, btn, btn_2,btn_3,ventana))
+        else:
+            text_nombre.configure(text='Contraseña actual:')
+            text_puesto.configure(text='Contraseña nueva:')
+            btn_3.configure(command=lambda:self.mensaje(nombre, puesto, text_nombre, text_puesto, ventana) )
+            if len(self.entry_nombre.get()) != 0 and len(self.entry_puesto.get()) != 0:
+                btn_3 ['state'] = ['normal']
 
         pass
 
-    def busqueda_art(self,tree, articulo, cantidad):
-        self.cantidad.delete(0, 'end')
-        if cantidad == '':
-            cantidad=1
-        self.cursor.execute("Select * from productos;")
-        artic = self.cursor.fetchall()
-        for productos in artic:
-            if articulo == productos[1]:
-                precio =int(productos[8])
-                cantidad = int(cantidad)
-                total = precio*cantidad
-                tree.insert('','end', text=productos[2], values=(cantidad, total))
-                self.dinero += total
-                self.lbl_cant.configure(text=f'$ {self.dinero}')
+    def mensaje(self,nombre, puesto, text_nombre, text_puesto, ventana):
+        opcion = messagebox.askyesno(title='Accion a guardar',message='¿Esta seguro de realizar esta opción?', parent=ventana)
+        print(opcion)
+        if opcion == True:
+            #guardar en la base de dato CONTRASEÑAAA
+            pass
+        nombre.delete(0,'end')
+        puesto.delete(0,'end')
+        text_nombre.configure(text='Usuario:')
+        text_puesto.configure(text='Puesto:')
+        nombre ['state'] = ['disabled']
+        puesto ['state'] = ['disabled']
 
-        self.entry_codigo.delete(0,'end')
+    def corte(self):
+        self.third.geometry('500x500')
+        self.third.deiconify()
+        self.frm = Frame(self.third)
+        self.frm.pack(fill='both', expand=1)
+        self.frm_superior = Frame(self.frm)
+        self.frm_superior.pack(fill='both', expand=1)
+        self.frm_superior_1 = Frame(self.frm_superior)
+        self.frm_superior_1.pack(fill='both', expand=1, side='left')
+        self.frm_superior_2 = Frame(self.frm_superior)
+        self.frm_superior_2.pack(fill='both', expand=1, side='left')
+        self.frm_btn = Frame(self.frm)
+        self.frm_btn.pack(fill='both', expand=1)
 
-        # print(articulo)
-        # if str(articulo) not in productos[1]:
-        #     resultado = messagebox.askquestion('No found', 'Articulo no encontrador, ¿desea agregarlo?')
-        #     if resultado == 'yes':
-        #         self.second_window(4,self.puesto)
-            
+        self.btn_ok = Button(self.frm_btn, text='Aceptar', command=lambda: self.regreso(self.frm, self.third,self.btn_new_client,
+        self.btn_abasto,self.btn_config))
+        self.btn_ok.pack(padx=10,pady=10)
 
-      
+        self.frm_corte = Frame(self.frm_superior_1)
+        self.frm_corte.pack(fill='x', expand=1)
+        self.corte = StringVar()
+        self.corte = self.total_de_venta(self.puesto)[0] # Solo el total
+        self.lbl_corte = Label(self.frm_corte,text='Corte:'+self.corte)
+        self.lbl_corte.pack(padx=10, pady=10)
+        self.frm_usuario = Frame(self.frm_superior_1)
+        self.frm_usuario.pack(fill='x', expand=1)
+        self.lbl_usuario = Label(self.frm_usuario, text='Encargado '+self.usuario, font=('', 14))
+        self.lbl_usuario.pack(padx=10, pady=10)
+        if self.puesto == 'Administrador':
+            self.frm_ganancia = Frame(self.frm_superior_1)
+            self.frm_ganancia.pack(fill='x', expand=1)
+            self.ganancia = self.total_de_venta(self.puesto)[1] #Ganacia
+            self.lbl_ganancia = Label(self.frm_ganancia, text='Ganancia '+self.ganancia, font=('', 14))
+            self.lbl_ganancia.pack(padx=10, pady=10)
+        self.scrbl = Scrollbar(self.frm_superior_2)
+        self.scrbl.pack(side='right', fill='y')
+        self.tree = Treeview(self.frm_superior_2, yscrollcommand=self.scrbl.set,selectmode='browse')
+        self.tree.pack(fill='both', expand=1) # TreeView de num de ticket, tipo de pago, y total de venta
+        self.scrbl.config(command=self.tree.yview)
 
 
-    def busqueda_cliente(self, articulo):
+    def total_de_venta(self):
+        #Colocar la suma de las facturas del dia
+        #return (total del dia, gaancia por articulo)
         pass
+
+    def informe_view(self): #supervisor y administrador
+        self.third.deiconify()
+        self.third.geometry('400x300')
+        self.frm_1 = Frame(self.third)
+        self.frm_1.pack(fill='both', expand=1)
+        self.frm_sup = Frame(self.frm_1)
+        self.frm_sup.pack(fill='both', expand=1)
+        self.frm_inf = Frame(self.frm_1, relief='groove', border=3)
+        self.frm_inf.pack(fill='both', expand=1)
+        self.frm_btn = Frame(self.frm_sup)
+        self.frm_btn.pack(fill='both', expand=1, side='bottom')
+        self.frm_btn_1 = Frame(self.frm_btn)
+        self.frm_btn_1.pack(fill='both', expand=1)
+        self.frm_btn_2 = Frame(self.frm_btn)
+        self.frm_btn_2.pack(fill='both', expand=1)
+        # Personalizacion
+        if self.puesto == 'administrador':
+            self.lbl = Label(self.frm_sup, text='Cantidad de periodo a mostrar:', font=('', 14))
+            self.lbl.pack(fill='x', expand=1)
+            self.cmbbx_dia = Combobox(self.frm_sup, values=['Dia', 'Semana', 'Mes'], state='readonly')
+            self.cmbbx_dia.pack(padx=10, pady=10)
+        self.lbl_1 = Label(self.frm_sup, text='Mostrar datos en relación a:', font=('', 14))
+        self.lbl_1.pack(fill='x', expand=1)
+        self.btn_1 = Button(self.frm_btn_1, text='Ganancias', command=lambda: self.graficar('ganacias'))
+        self.btn_1.pack(padx=40, pady=10, side='left')
+        self.btn_2 = Button(self.frm_btn_1, text='Tipo de pago', command=lambda: self.graficar('tipo'))
+        self.btn_2.pack(padx=40, pady=10, side='left')
+        self.btn_4 = Button(self.frm_btn_2, text='Productos más vendidos', command=lambda: self.graficar('+vendidos'))
+        self.btn_4.pack(padx=10, pady=10)
+
+        self.btn_regreso = Button(self.frm_inf, text='Regresar', command=lambda:self.regreso(self.frm_1, self.third,self.btn_new_client,
+        self.btn_abasto,self.btn_config))
+        self.btn_regreso.pack(padx=5, pady=10, side='left')
+
+    def graficar(self, tipo):
+        # si es administrador solo instanciar self.cmbbx_dia para saber el periodo a consultar
+        if tipo == 'ganancias':# ganancias, devoluciones, ingreso de venta dependiendo su tipo de pago, productos más vendidos(departamento)
+            self.x =  ['Efectivo', 'Tarjeta', 'Transferencia', 'Mixto']
+            self.y =  [40, 20, 15, 35]
+            plt.bar(self.x, self.y)
+            plt.show()
+
+    def createWidgets(self,frm, lbl_txt, strvar, state):
+            self.lbl = Label(frm, text=lbl_txt,font=('',13))
+            self.lbl.pack(side='left', padx=3)
+            self.entry = Entry(frm, textvariable=strvar, state=state, )
+            self.entry.pack(side='left', fill='x', expand=1)
+            return (self.lbl, self.entry)
     
-
-    def usuarios(self, frm):
-        self.trvw_info = Treeview(frm, columns=("col1"))
-        self.frm.configure(width=1200)
-        self.trvw_info.pack(fill='both', expand=1)
-        
-        self.trvw_info.column("#0", width=200)
-        self.trvw_info.column("col1", width=200, anchor='center')
-
-        self.trvw_info.heading("#0", text='Usuario', anchor='center')
-        self.trvw_info.heading("col1", text='Puesto', anchor='center')
-        self.btn_usuario['state'] = ['disabled']
-        
-    
-    def style_pos(self): #FUNCION DE ESTILO: BOTONES, TREEVIEW.
-        mystyle = Style()
-        settings = settings = {"TButton": {"configure": {"padding": [5, 1],
-                                            "background": "#eb7a5a", "font": ("","14"), "anchor":"center"
-                                           },
-                              "map": {"background": [("active", "#70231a"),
-                                                     ("disabled", "#A9A9A9")],
-                                      "foreground": [("selected", "#ffffff"),
-                                                     ("active", "#000000"),]      #tipos de relieves: flat, groove, raised, ridge, solid, or sunken
-                                 }                                               #parent:'winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative'
-                              }, "Treeview":{"configure": {"padding": [5, 1],
-                                            "background": "#ffffff", "font":("", "10")
-                                           },
-                              "map": {"background": [("active", "#ffffe4"),
-                                                     ("disabled", "#A9A9A9")],
-                                      "foreground": [("selected", "#fb1b0a"),
-                                                     ("active", "#000000"),]
-                                 }},"Treeview.Heading":{"configure": {"padding": [5, 1],
-                                            "background": "#42c697", "font":("", "10")
-                                           },
-                              "map": {"background": [("active", "#ffa927"),
-                                                     ("disabled", "#A9A9A9")],
-                                      "foreground": [("selected", "#ffffff"),
-                                                     ("active", "#000000"),]
-                                 }} } 
-        mystyle.theme_create('mi_estilo', parent='clam', settings=settings)
-        mystyle.theme_use('mi_estilo')
-
-    def Status(self): # Configuracion del label USUARIO (PUESTO)
-        pst = self.puesto
-        usuario = self.usuario
-        self.lbl_usuario.configure(text= usuario+"("+pst+")")
-
     def inicio_sesion(self,frm):
         frm.destroy()
         self.second.withdraw()
         self.deiconify()
         self.frm_prog.destroy()
-        self.password()
+        self.inicialize()
 
+    def style_pos(self): #FUNCION DE ESTILO: BOTONES, TREEVIEW.
+        # Botones : fondo:#B88969 , selección:#E3C3AF .
+        #Frames iniciales: #4C1F04 
+        #Frame laterales: #F9F2E9
+        #Frame exhibición de precio: #FEF8F5
+        mystyle = Style()
+        settings = settings = {"TButton": {"configure": {"padding": [5, 1],
+                                            "background": "#B88969",
+                                             "font": ("","14"), 
+                                            "anchor":"center"},
+                              "map": {"background": [("active", "#E3C3AF"),
+                                                     ("disabled", "#A9A9A9")],
+                                      "foreground": [("selected", "#ffffff"),
+                                                     ("active", "#000000"),]}}, 
+                                "Treeview": {"configure": {"background": "#ffffff",
+                                             "font": ("","12"), 
+                                            "anchor":"center", "rowheight":"30"},
+                                            "map":{"background": [("selected", "#DB7849")],
+                                      "foreground": [("selected", "#420D03"),
+                                                     ("active", "#000000")]}}, 
+                                "Treeview.Heading":{"configure": {"background": "#42c697", 
+                                                        "font":("", "14"),
+                                                        "relief":"solid",
+                                                        "border":".1" },
+                              "map": {"background": [("active", "#E89F5C"),
+                                                     ("!pressed", "#BF7A42")],
+                                      "foreground": [("selected", "#ffffff"),
+                                                     ("active", "#000000")]}}}  #tipos de relieves: flat, groove, raised, ridge, solid, or sunken
+                                       #parent:'winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative'
+        mystyle.theme_create('mi_estilo', parent='clam', settings=settings)
+        mystyle.theme_use('mi_estilo')
 
 if __name__ == '__main__':
     app = POS()
